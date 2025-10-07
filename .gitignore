@@ -1,0 +1,22 @@
+# Alles negeren
+*
+
+# Bewaar configuratie files
+!CMakeLists.txt
+!README.md
+!.gitignore
+!CMakeFiles
+!CMakeFiles/**
+!SendJson.exe
+
+# Bewaar broncode
+!src/
+!src/**
+!lib
+!lib/**
+!ESP32
+!ESP32/**
+
+# Bewaar data
+!Information
+!Information/**
