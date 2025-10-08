@@ -17,16 +17,9 @@ For JSON extraction thanks to https://github.com/zserge/jsmn/.
 For starting with the bare metal programming https://github.com/dwelch67/raspberrypi-zero.
 
 ## Generating code
-Made on a Windows11 machine using:
-make: The makefile is made to be used with https://www.gnu.org/software/make/.
-compiler: The Compiler used is 'arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi.exe' downloaded from https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
-I had to include the install directories from both in my system variables PATH by hand. Do not know why, and did not spent the time to find out why.
-After running 'make' copy kernel.img to an SD. Don't forget to copy bootcode.bin and start.elf. All in the root of the SD card.
+The Compiler to be used can be downloaded from https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
+I had to include the install directories in my system variables PATH by hand. Do not know why, and did not spent the time to find out why.
 
-## Modifying values via JSON
-Included is a .exe file to run on a windows pc to generate a JSON (only to use with this DoublePulse_Tester). Source code can be found on https://github.com/ErikBakker100/JSONGenerator
-
-## Building using CMAKE
 To generate the build files via Cmake follow the following commands.
 Run the following command from the root directory to configure the specific system:
 `cmake -B <NAME> -G "Unix Makefiles" -DARCH=<VERSION> -DRPI_MODEL=<MODEL>`
@@ -48,6 +41,9 @@ If a configuration has changed (f.e. New version compiler has been installed), y
 If you want debugging information add `-DCMAKE_BUILD_TYPE=Debug` to the `cmake -B …` command.
 
 Now copy all files in the /sdcard directory to your SD_Card and insert in your Raspberry
+
+## Modifying values via JSON
+Included is a .exe file to run on a windows pc to generate a JSON (only to use with this DoublePulse_Tester). Source code can be found on https://github.com/ErikBakker100/JSONGenerator
 
 ## Updating Arm toolchain
 Make sure your toolchain directory is in your 'PATH' systemvariable.
