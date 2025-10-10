@@ -2,4 +2,4 @@ arm_64bit=@ARM_64BIT@
 kernel=@KERNEL@
 gpio=22-27=a4
 dtoverlay=disable-bt
-@MODEL_CONFIG@
+core_freq=@CORE_FREQ@

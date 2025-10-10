@@ -14,7 +14,7 @@ void uart_init() {
     AUX_MU_MCR_REG = 0;            // No flow control
     AUX_MU_IER_REG = 0;            // Disable interrupts
     AUX_MU_IIR_REG = 0xC6;         // Clear FIFOs
-    AUX_MU_BAUD_REG = (CORE_FREQ / (8 * BAUDRATE)) - 1; // Set baud rate
+    AUX_MU_BAUD_REG = ((CORE_FREQ * 1000000) / (8 * BAUDRATE)) - 1; // Set baud rate
 
     // Set GPIO 14 and 15 to ALT5 (Mini UART)
     unsigned int ra = GPFSEL1;

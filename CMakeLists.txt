@@ -74,10 +74,13 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Kies variabele op basis van RPI_MODEL
 if(RPI_MODEL STREQUAL "Z1")
     set(RPI_DEFINE raspberry_zero_1w)
+    set(CORE_FREQ 250)
 elseif(RPI_MODEL STREQUAL "Z2")
     set(RPI_DEFINE raspberry_zero_2w)
+    set(CORE_FREQ 400)
 elseif(RPI_MODEL STREQUAL "4B")
     set(RPI_DEFINE raspberry_pi_4b)
+    set(CORE_FREQ 500)
 else()
     message(FATAL_ERROR "Onbekend RPI_MODEL: ${RPI_MODEL}")
 endif()
@@ -85,6 +88,7 @@ endif()
 # Definities doorgeven aan de compiler (alleen voor C, niet voor ASM)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANGUAGE:C>:${RPI_DEFINE}>
+    $<$<COMPILE_LANGUAGE:C>:CORE_FREQ=${CORE_FREQ}>
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
