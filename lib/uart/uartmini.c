@@ -1,56 +1,61 @@
 #include "include/uartmini.h"
 #include "../gpio/include/gpio.h"
 
-extern void delay(unsigned int);
+volatile aux_regs_t *AUX;
 
 void uart_init() {
+    AUX = (volatile aux_regs_t *)(rpi_board.mmio_base + 0x215000); // set AUX base address pointer
     // Disable the UART before configuring it
-    AUX_ENABLES = 0;
+    AUX->ENABLES = 0;
+    // Enable Mini UART (bit 0)
+    AUX->ENABLES |= 1;
 
-    AUX_ENABLES = 1;
-
-    AUX_MU_CNTL_REG = 0;           // Disable TX/RX
-    AUX_MU_LCR_REG = 3;            // 8-bit mode
-    AUX_MU_MCR_REG = 0;            // No flow control
-    AUX_MU_IER_REG = 0;            // Disable interrupts
-    AUX_MU_IIR_REG = 0xC6;         // Clear FIFOs
-    AUX_MU_BAUD_REG = ((CORE_FREQ * 1000000) / (8 * BAUDRATE)) - 1; // Set baud rate
-
+    AUX->MU_CNTL_REG = 0;           // Disable TX/RX
+    AUX->MU_LCR_REG = 3;            // 8-bit mode
+    AUX->MU_MCR_REG = 0;            // No flow control
+    AUX->MU_IER_REG = 0;            // Disable interrupts
+    AUX->MU_IIR_REG = 0xC1;         // enable FIFO, clear
+    AUX->MU_BAUD_REG = (((rpi_board.core_freq_mhz * 1000000) + (4 * rpi_board.baudrate)) / (8 * rpi_board.baudrate)) - 1;
     // Set GPIO 14 and 15 to ALT5 (Mini UART)
-    unsigned int ra = GPFSEL1;
-    ra &= ~(7 << 12);   // Clear FSEL14
-    ra |= 2 << 12;      // ALT5
-    ra &= ~(7 << 15);   // Clear FSEL15
-    ra |= 2 << 15;      // ALT5
-    GPFSEL1 = ra;
+    unsigned int ra = GPIO->FSEL[1];
+    ra &= ~((7 << 12) | (7 << 15));   // Clear FSEL14/15
+    ra |= (2 << 12) | (2 << 15);      // ALT5
+    GPIO->FSEL[1] = ra;
 
     // Disable pull up/down for pins 14 and 15
-    GPPUD = 0;
+    GPIO->PUD = 0;
     delay(150);
-    GPPUDCLK0 = (1 << 14) | (1 << 15);
+    GPIO->PUDCLK[0] = (1 << 14) | (1 << 15);
     delay(150);
-    GPPUDCLK0 = 0;
+    GPIO->PUDCLK[0] = 0;
 
-    AUX_MU_CNTL_REG = 3; // Enable TX and RX
+    AUX->MU_CNTL_REG = 3; // Enable TX and RX
 }
 
-void uart_send(unsigned int c) {
-    while (!(AUX_MU_LSR_REG & 0x20));
-    AUX_MU_IO_REG = c;
+void uart_putc(uint8_t c) {
+    while (!(AUX->MU_LSR_REG & 0x20));
+    AUX->MU_IO_REG = c;
 }
 
 void uart_puts(const char *s) {
     while (*s) {
-        uart_send(*s++);
+        uart_putc(*s++);
     }
 }
 
-void uart_put_uint(unsigned int n) {
-    char buf[10];
+uint8_t uart_getc(void) {
+    // Wacht tot er data beschikbaar is in de RX FIFO (bit 0 = data ready)
+    while (!(AUX->MU_LSR_REG & 0x01));
+    // Lees de byte (laagste 8 bits)
+    return (uint8_t)(AUX->MU_IO_REG & 0xFF);
+}
+
+void uart_put_uint(uint32_t n) {
+    uint8_t buf[10];
     int i = 0;
 
     if (n == 0) {
-        uart_send('0');
+        uart_putc('0');
         return;
     }
 
@@ -61,43 +66,33 @@ void uart_put_uint(unsigned int n) {
 
     // getal staat nu omgekeerd in buf[]
     while (i--) {
-        uart_send(buf[i]);
+        uart_putc(buf[i]);
     }
 }
 
-int uart_try_recv(void) {
-    if (AUX_MU_LSR_REG & 0x01) {
-        return AUX_MU_IO_REG & 0xFF;
+uint8_t uart_try_recv(void) {
+    if (AUX->MU_LSR_REG & 0x01) {
+        return (char)AUX->MU_IO_REG & 0xFF;
     } else {
         return -1; // Geen data beschikbaar
     }
 }
-    
-int uart_read_line_blocking(char *buf, int maxlen, unsigned int timeout) {
-    int c = uart_try_recv();
-    int i = 0;
-    if (c == -1) {
-        buf[i] = '\0';
-        return 0; // Geen data beschikbaar om te starten
-    }
-    buf[i++] = (char)c;
+
+uint16_t uart_read_line_blocking(char *buf, uint16_t maxlen, uint32_t timeout) {
+    int i = 0, c;
     unsigned int wait = 0;
+
     while (i < maxlen - 1) {
-        // Wacht op volgend karakter met timeout
-        do {
-            c = uart_try_recv();
-            if (wait++ >= timeout) {
-                buf[i] = '\0';
-                return i; // Timeout tijdens lezen
-            }
-        } while (c == -1);
-        buf[i++] = (char)c;
-        if (c == '\n') break;
-        wait = 0; // Reset timeout na succesvol karakter
+        c = uart_try_recv();
+        if (c == -1) {
+            if (wait++ >= timeout) break;
+        } else {
+            buf[i++] = (char)c;
+            if (c == '\n' || c == '\r') break;
+            wait = 0;
+        }
     }
-    buf[i] = '\0'; // Sluit string af
-    if (i == maxlen - 1) {
-        buf[i] = '\0'; // Zorg ervoor dat de buffer altijd een null-terminator heeft
-    }
+    buf[i] = '\0';
     return i;
 }
+

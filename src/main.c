@@ -2,7 +2,7 @@
 // Erik Bakker 2025
 // Partly used from Teensy 4.0 Signal Generator, Electronics Workshop, Robin O'Reilly
 
-#include "..\lib\general\rpi.h"
+#include "../lib/general/include/rpi.h"
 #include "../lib/general/include/stdlib.h" // Include standard library for string functions>
 #include "../lib/gpio/include/gpio.h"
 #include "../lib/uart/include/uartmini.h"
@@ -31,12 +31,6 @@ unsigned long Intervals[4]={PW1, IPD, PW2, PI}; // Array to hold the intervals
 
 // put function declarations here:
 void DoublePulseControl(void); // Function to control the double pulse generation
-
-void delay(unsigned int count) {
-    for (volatile unsigned int i = 0; i < count; i++) {
-        asm volatile("nop");
-    }
-}
 
 void main() {
   char jsonString[CHAR_BUFFER]; // Uart buffer for receiving JSON string

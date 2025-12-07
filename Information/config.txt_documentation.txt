@@ -1,0 +1,1 @@
+https://www.raspberrypi.com/documentation/computers/legacy_config_txt.html#legacy-options
