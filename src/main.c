@@ -32,7 +32,7 @@ unsigned long Intervals[4]={PW1, IPD, PW2, PI}; // Array to hold the intervals
 // put function declarations here:
 void DoublePulseControl(void); // Function to control the double pulse generation
 
-void main() {
+void core_main_0(uint32_t arg0, uint32_t arg1) {
   char jsonString[CHAR_BUFFER]; // Uart buffer for receiving JSON string
   jsmn_parser p; // JSON parser
   jsmntok_t t[CHAR_BUFFER]; // Array of tokens for JSON parsing

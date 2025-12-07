@@ -1,3 +1,5 @@
+#include "include/stdlib.h"
+
 unsigned int strlen(const char *s) {
     unsigned int len = 0;
     while (*s++) len++;
@@ -30,4 +32,26 @@ unsigned long strtoul(const char *nptr, char **endptr, int base) {
     }
     if (endptr) *endptr = (char *)nptr;
     return result;
+}
+
+void u32_to_str(uint32_t value, char *buf) {
+    char tmp[10];
+    int i = 0;
+    // Speciale case: 0
+    if (value == 0) {
+        buf[0] = '0';
+        buf[1] = '\0';
+        return;
+    }
+    // Cijfer voor cijfer in omgekeerde volgorde
+    while (value > 0 && i <10) {
+        tmp[i++] = '0' + (value % 10);
+        value /= 10;
+    }
+    // Draai de volgorde om in buf[]
+    int j = 0;
+    while (i > 0) {
+        buf[j++] = tmp[--i];
+    }
+    buf[j] = '\0';  // nulterminator
 }
