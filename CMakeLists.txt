@@ -91,17 +91,36 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANGUAGE:C>:CORE_FREQ=${CORE_FREQ}>
 )
 
+# ----------------------
+# Model-specifieke compileropties
+# ----------------------
+set(ARCH_FLAGS "")
+
+if(RPI_MODEL STREQUAL "Z1" AND ARCH STREQUAL "arm32")
+	set(ARCH_FLAGS -mcpu=arm1176jzf-s -marm) #-marm dwingt de compiler om ARM 32-bit (A32) instructies te genereren.
+elseif(RPI_MODEL STREQUAL "Z2" AND ARCH STREQUAL "arm32")
+    set(ARCH_FLAGS -mcpu=cortex-a53 -marm)
+elseif(RPI_MODEL STREQUAL "Z2" AND ARCH STREQUAL "arm64")
+    set(ARCH_FLAGS -march=armv8-a)
+elseif(RPI_MODEL STREQUAL "4B" AND ARCH STREQUAL "arm32")
+    set(ARCH_FLAGS -mcpu=cortex-a72 -marm)
+elseif(RPI_MODEL STREQUAL "4B" AND ARCH STREQUAL "arm64")
+    set(ARCH_FLAGS -march=armv8-a)	
+endif()
+
 target_compile_options(${PROJECT_NAME} PRIVATE
     -Wall
-    -ffreestanding
     -fno-builtin
+	${ARCH_FLAGS}
 )
+
+target_compile_options(${PROJECT_NAME} PRIVATE ${ARCH_FLAGS})															 
 
 target_link_options(${PROJECT_NAME} PRIVATE
     "-nostartfiles"
     "-nostdlib"
     "-T${LINKER_SCRIPT}"
-    "-Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map"
+    "-Wl,-Map=${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.map"
 )
 
 # ----------------------
@@ -147,8 +166,14 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} --srec-forceS3
             $<TARGET_FILE:${PROJECT_NAME}>
             ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.srec
-    COMMAND ${CMAKE_COMMAND} -E echo "Omzetten ELF naar kernel(8).img en SREC"
 )
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_OBJDUMP} -S $<TARGET_FILE:${PROJECT_NAME}> > ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.lst
+    )
+endif()
 
 # Zorg dat de kernel altijd gebouwd wordt als je 'make' doet
 add_custom_target(kernel ALL

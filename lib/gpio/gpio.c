@@ -1,7 +1,5 @@
 #include "include/gpio.h"
 
-volatile gpio_regs_t *GPIO;
-
 void gpio_init() {
     GPIO = (volatile gpio_regs_t *)(rpi_board.mmio_base + 0x200000);
 }

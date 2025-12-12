@@ -1,27 +1,20 @@
 .section .text._start, "ax"
 .extern core_main_0
 .extern core_main_1
-.extern core_main_2
-
-.globl _start
-.globl core_entry_1
-.globl core_entry_2
-.globl core_entry_3
 .extern irq_handler_0
 .extern irq_handler_1
-.extern irq_handler_2
 .extern __stack_svc_top_core0
 .extern __stack_irq_top_core0
 .extern __stack_fiq_top_core0
 .extern __stack_svc_top_core1
 .extern __stack_irq_top_core1
 .extern __stack_fiq_top_core1
-.extern __stack_svc_top_core2
-.extern __stack_irq_top_core2
-.extern __stack_fiq_top_core2
+.globl _start
+.globl core_entry_1
+.globl core_entry_2
 
 // -----------------------------------------------------
-//  Entry point voor Core0-2
+//  Entry point voor Core0-1
 // -----------------------------------------------------
 _start:
     // Clear the BSS segment (assumes __bss_start and __bss_end word-aligned).
@@ -75,10 +68,9 @@ svc_entry_core\core:
 
 core_entry_x 0
 core_entry_x 1
-core_entry_x 2
 
 // -----------------------------------------------------
-//  Entry Irq's Core 0-2
+//  Entry Irq's Core 0-1
 // -----------------------------------------------------
 .macro	    irq_entry_x	core
 irq_entry_\core:
@@ -90,9 +82,8 @@ irq_entry_\core:
 
 irq_entry_x	0
 irq_entry_x	1
-irq_entry_x	2
 // -----------------------------------------------------
-//  Vector tables Core 0-2
+//  Vector tables Core 0-1
 // -----------------------------------------------------
 .macro	    vector_core_x	core
 .section .vectors_core\core, "ax"
@@ -111,7 +102,6 @@ vector_table_core\core:
 
 vector_core_x 0
 vector_core_x 1
-vector_core_x 2
 // -----------------------------------------------------
 hang:
     b hang
