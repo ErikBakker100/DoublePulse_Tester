@@ -35,12 +35,10 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   jsmntok_t t[CHAR_BUFFER]; // Array of tokens for JSON parsing
   jsmn_init(&p);
   mu_init(); // Initialize UART
-  gpio_init(OUTPUT_PIN, GPIO_OUT);
-  gpio_clear(OUTPUT_PIN); // Initial state low (inactive)
   start_core1();
   mu_puts("**************Dual Pulse Generator**************\r\n");
   mu_puts("> Usage: Send JSON string, for e.g {\"pulseWidth1\": 70, \"interPulseDelay\": 30, \"pulseWidth2\": 50, \"pulseInterval\": 500}.\r\n");
-  mu_puts("> Using output port: ");
+  mu_puts("> Using GPIO: ");
   mu_put_uint(OUTPUT_PIN);
   mu_puts(", default values :\r\n");
   mu_puts("> _____________                   ____________\r\n");
@@ -55,7 +53,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
 
   while (1) {
     uart_transmitter_loop();
-  /*  if (mu_read_line_blocking(jsonString, CHAR_BUFFER, 100000)) { // If a character is in the UART buffer, try to get the whole string, or timeout.
+    if (mu_read_line(jsonString, CHAR_BUFFER, 100000)) { // If a character is in the UART buffer, try to get the whole string, or timeout.
       mu_puts("> Parsing JSON string... : ");
       mu_puts(jsonString); // Print the received JSON string
       mu_puts("\r\n");
@@ -124,7 +122,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
       mu_put_uint(Intervals[3]);
       mu_puts("\r\n> Starting new pulse generation...\r\n");
     }
-*/  }
+  }
 }
 
 void irq_handler_core0(void){} // IRQ handler for core0

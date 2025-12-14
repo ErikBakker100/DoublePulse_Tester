@@ -1,5 +1,4 @@
 #include "include/core1.h"
-#include "../general/include/config.h"
 
 void irq_handler_mailbox0_core1(void);
 void irq_handler_mailbox1_core1(void);
@@ -22,9 +21,7 @@ unsigned long delay4 = 0; // holds Pulse Interval delay
 */
 
 // Delay loop
-volatile static void delay(int count) {
-    while (count--) asm volatile("nop");
-}
+#define DELAY(count) do { volatile uint32_t _i = (count); while (_i--) asm volatile("nop"); } while(0)
 
 void start_core1(void) {
     *core_boot(1) = (core_reg_t)(uintptr_t)&core_entry_1;
@@ -42,19 +39,65 @@ void core_main_1() {
     volatile uint32_t *gpio_on = &GPIO->SET[bank];
     volatile uint32_t *gpio_off = &GPIO->CLR[bank];
     uint32_t mask = OUTPUT_PIN<32?(1u << OUTPUT_PIN):(1u << (OUTPUT_PIN - 32));
-    
+    gpio_init_pin(OUTPUT_PIN, GPIO_OUT);
+    gpio_clear(OUTPUT_PIN); // Initial state low (inactive)    
     irq_init_core1();
 
     while (1) {
         *gpio_on = mask;
-        delay(delay1); // PulseWidth1
+        DELAY(delay1); // PulseWidth1
         *gpio_off = mask;
-        delay(delay2); // interPulseDelay
+        DELAY(delay2); // interPulseDelay
         *gpio_on = mask;
-        delay(delay3); // PulseWith2
+        DELAY(delay3); // PulseWith2
         *gpio_off = mask;
-        delay(delay4); // Pulseinterval
+        DELAY(delay4); // Pulseinterval
    }
+/*  Alternatief voor instabiele DELAY() functie, gebruik PWM in ns modus
+    pwm_ns_init();
+    irq_init_core1();
+
+    while (1) {
+        pwm_ns_pulse(delay1); // PulseWidth1
+        delay_us(delay2 / 1000); // interPulseDelay
+        pwm_ns_pulse(delay3); // PulseWith2
+        delay_us(delay4 / 1000); // Pulseinterval
+   }
+   #define PWM_BASE    0x2020C000
+    #define PWM_CTL     ((volatile uint32_t *)(PWM_BASE + 0x0))
+    #define PWM_RNG1    ((volatile uint32_t *)(PWM_BASE + 0x10))
+    #define PWM_DAT1    ((volatile uint32_t *)(PWM_BASE + 0x14))
+
+    #define CM_PWMCTL   ((volatile uint32_t *)(0x20101000 + 0xA0)) // Clock manager
+    #define CM_PWMDIV   ((volatile uint32_t *)(0x20101000 + 0xA4))
+    #define CM_PWMCLK_CNTL  ((volatile uint32_t *)(0x20101000 + 0xA0))
+    #define CM_PWMCLK_DIV   ((volatile uint32_t *)(0x20101000 + 0xA4))
+
+    void pwm_ns_init() {
+        // 1. Stop PWM
+        *PWM_CTL = 0;
+        delay_us(10);
+
+        // 2. Stop clock
+        *CM_PWMCTL = 0x5A000000 | (1 << 5); // kill clock
+        delay_us(10);
+
+        // 3. Stel PWM klok in: 1 GHz / 1000 = 1 MHz tick (1 tick = 1 ns, voorbeeld)
+        *CM_PWMDIV = 0x5A000000 | 1000<<12; // divider
+        *CM_PWMCTL = 0x5A000000 | (1 << 4) | 1; // source oscillator + enable
+
+        // 4. Stel PWM range en modus
+        *PWM_RNG1 = 1000; // 1000 ticks = 1 µs, 1 tick = 1 ns
+        *PWM_DAT1 = 0;     // begin low
+        *PWM_CTL = (1 << 0) | (1 << 7); // PWM1 enable, MS mode
+    }
+
+    void pwm_ns_pulse(uint32_t width_ns) {
+        if (width_ns > *PWM_RNG1) width_ns = *PWM_RNG1;
+        *PWM_DAT1 = width_ns;     // pulse high for width_ns ticks
+        while (*PWM_DAT1 != 0);   // wacht tot pulse klaar is
+    }
+*/
 }
 
 void irq_init_core1(void) {
@@ -94,31 +137,17 @@ void irq_handler_core1(void) {
 }
 
 void irq_handler_mailbox0_core1(void) {
-    mu_puts("MBOX0 IRQ Core1: ");
     delay1 = INT_ARM_LOCAL_REGS->MBOX_CLR04_REG;
-    mu_put_uint(INT_ARM_LOCAL_REGS->MBOX_CLR04_REG);
-    mu_puts("\r\n");
 }
 
 void irq_handler_mailbox1_core1(void) {
-    mu_puts("MBOX1 IRQ Core1: ");
     delay2 = INT_ARM_LOCAL_REGS->MBOX_CLR05_REG;
-    mu_put_uint(INT_ARM_LOCAL_REGS->MBOX_CLR05_REG);
-    mu_puts("\r\n");
-
 }
 
 void irq_handler_mailbox2_core1(void) {
-    mu_puts("MBOX2 IRQ Core1: ");
     delay3 = INT_ARM_LOCAL_REGS->MBOX_CLR06_REG;
-    mu_put_uint(INT_ARM_LOCAL_REGS->MBOX_CLR06_REG);
-    mu_puts("\r\n");
-
 }
 
 void irq_handler_mailbox3_core1(void) {
-    mu_puts("MBOX3 IRQ Core1: ");
     delay4 = INT_ARM_LOCAL_REGS->MBOX_CLR07_REG;
-    mu_put_uint(INT_ARM_LOCAL_REGS->MBOX_CLR07_REG);
-    mu_puts("\r\n");
 }

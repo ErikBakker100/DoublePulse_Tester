@@ -84,15 +84,15 @@ void mu_put_uint(uint32_t n) {
     }
 }
 
-uint8_t mu_try_recv(void) {
+int16_t mu_try_recv(void) {
     if (MU->MU_LSR_REG & 0x01) {
-        return (char)MU->MU_IO_REG & 0xFF;
+        return (uint16_t)MU->MU_IO_REG & 0xFF;
     } else {
         return -1; // Geen data beschikbaar
     }
 }
 
-uint16_t mu_read_line_blocking(char *buf, uint16_t maxlen, uint32_t timeout) {
+uint16_t mu_read_line(char *buf, uint16_t maxlen, uint32_t timeout) {
     int i = 0, c;
     unsigned int wait = 0;
     if(!(MU->MU_LSR_REG & 0x01)) return i; // No data to process
