@@ -53,7 +53,7 @@ void mu_putc(uint8_t c) {
 
 void mu_puts(const char *s) {
     while (*s) {
-        mu_putc(*s++);
+        mu_putc((uint8_t)*s++);
     }
 }
 
@@ -95,7 +95,7 @@ uint8_t mu_try_recv(void) {
 uint16_t mu_read_line_blocking(char *buf, uint16_t maxlen, uint32_t timeout) {
     int i = 0, c;
     unsigned int wait = 0;
-
+    if(!(MU->MU_LSR_REG & 0x01)) return i; // No data to process
     while (i < maxlen - 1) {
         c = mu_try_recv();
         if (c == -1) {

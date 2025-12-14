@@ -1,4 +1,5 @@
 #include "include/core1.h"
+#include "../general/include/config.h"
 
 void irq_handler_mailbox0_core1(void);
 void irq_handler_mailbox1_core1(void);
@@ -37,11 +38,12 @@ void start_core1(void) {
 
 // Entry point for core1
 void core_main_1() {
-    irq_init_core1();
     uint32_t bank = OUTPUT_PIN<32?0:1;
     volatile uint32_t *gpio_on = &GPIO->SET[bank];
     volatile uint32_t *gpio_off = &GPIO->CLR[bank];
     uint32_t mask = OUTPUT_PIN<32?(1u << OUTPUT_PIN):(1u << (OUTPUT_PIN - 32));
+    
+    irq_init_core1();
 
     while (1) {
         *gpio_on = mask;
@@ -92,29 +94,31 @@ void irq_handler_core1(void) {
 }
 
 void irq_handler_mailbox0_core1(void) {
-    mu_puts("MBOX0 IRQ Core1: \n");
+    mu_puts("MBOX0 IRQ Core1: ");
     delay1 = INT_ARM_LOCAL_REGS->MBOX_CLR04_REG;
     mu_put_uint(INT_ARM_LOCAL_REGS->MBOX_CLR04_REG);
-    mu_putc('\n');
+    mu_puts("\r\n");
 }
 
 void irq_handler_mailbox1_core1(void) {
-    mu_puts("MBOX1 IRQ Core1: \n");
+    mu_puts("MBOX1 IRQ Core1: ");
     delay2 = INT_ARM_LOCAL_REGS->MBOX_CLR05_REG;
     mu_put_uint(INT_ARM_LOCAL_REGS->MBOX_CLR05_REG);
-    mu_putc('\n');
+    mu_puts("\r\n");
+
 }
 
 void irq_handler_mailbox2_core1(void) {
-    mu_puts("MBOX2 IRQ Core1: \n");
+    mu_puts("MBOX2 IRQ Core1: ");
     delay3 = INT_ARM_LOCAL_REGS->MBOX_CLR06_REG;
     mu_put_uint(INT_ARM_LOCAL_REGS->MBOX_CLR06_REG);
-    mu_putc('\n');
+    mu_puts("\r\n");
+
 }
 
 void irq_handler_mailbox3_core1(void) {
-    mu_puts("MBOX3 IRQ Core1: \n");
+    mu_puts("MBOX3 IRQ Core1: ");
     delay4 = INT_ARM_LOCAL_REGS->MBOX_CLR07_REG;
     mu_put_uint(INT_ARM_LOCAL_REGS->MBOX_CLR07_REG);
-    mu_putc('\n');
+    mu_puts("\r\n");
 }

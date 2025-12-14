@@ -26,3 +26,5 @@
 #ifndef BAUDRATE
     #define BAUDRATE 115200
 #endif
+
+#define CHAR_BUFFER 256 // Size of the UART buffer for JSON strings

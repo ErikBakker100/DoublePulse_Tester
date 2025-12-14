@@ -48,7 +48,7 @@ endif()
 # ----------------------
 # Project setup
 # ----------------------
-project(baremetal_blinker
+project(doublepulse
     VERSION 1.0
     LANGUAGES C ASM)
 
@@ -67,6 +67,10 @@ set(LINKER_SCRIPT ${CMAKE_BINARY_DIR}/bin/linker.ld)
 # Executable
 # ----------------------
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
 
 # ----------------------
 # Compiler instellingen
@@ -113,8 +117,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -fno-builtin
 	${ARCH_FLAGS}
 )
-
-target_compile_options(${PROJECT_NAME} PRIVATE ${ARCH_FLAGS})															 
 
 target_link_options(${PROJECT_NAME} PRIVATE
     "-nostartfiles"

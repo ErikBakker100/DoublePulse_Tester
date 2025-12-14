@@ -9,6 +9,8 @@
 #include "../lib/uart/include/miniuart.h"
 #include "../lib/json/include/jsmn.h"
 #include "../lib/multi_core/include/core1.h"
+#include "../lib/general/include/BCM2835.h"
+#include "../lib/general/include/BCM2836.h"
 
 // Timing Variables
 //  _____________                   ____________
@@ -27,6 +29,7 @@ unsigned long Intervals[4]={PW1, IPD, PW2, PI}; // Array to hold the intervals
 
 void core_main_0(uint32_t arg0, uint32_t arg1) {
   board_init(); // detecteer bord en stel mmio_base pointers in
+  gpio_init(); // Initialize GPIO
   char jsonString[CHAR_BUFFER]; // Uart buffer for receiving JSON string
   jsmn_parser p; // JSON parser
   jsmntok_t t[CHAR_BUFFER]; // Array of tokens for JSON parsing
@@ -43,6 +46,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts("> _____________                   ____________\r\n");
   mu_puts(">| pulseWidth1 | interPulseDelay | pulseWith2 | pulseInterval |\r\n");
   mu_puts(">      70       _____ 30 ________      50      _____ 500______\r\n");
+  uart_transmitter_loop();
   // Tell core1 the default values via IRQ's
   INT_ARM_LOCAL_REGS->MBOX_SET04_REG = Intervals[0];
   INT_ARM_LOCAL_REGS->MBOX_SET05_REG = Intervals[1];
@@ -51,12 +55,12 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
 
   while (1) {
     uart_transmitter_loop();
-    if (mu_read_line_blocking(jsonString, CHAR_BUFFER, 10000)) { // If a character is in the UART buffer, try to get the whole string, or timeout.
+  /*  if (mu_read_line_blocking(jsonString, CHAR_BUFFER, 100000)) { // If a character is in the UART buffer, try to get the whole string, or timeout.
       mu_puts("> Parsing JSON string... : ");
       mu_puts(jsonString); // Print the received JSON string
       mu_puts("\r\n");
       jsmn_init(&p);
-      int r = jsmn_parse(&p, jsonString, strlen(jsonString), t, sizeof(t) / sizeof(t[0]));
+      int r = jsmn_parse(&p, (const char *)jsonString, strlen(jsonString), t, sizeof(t) / sizeof(t[0]));
       if (r < 0) {
         mu_puts(">ERR Parsing JSON: ");
         switch (r) {
@@ -120,6 +124,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
       mu_put_uint(Intervals[3]);
       mu_puts("\r\n> Starting new pulse generation...\r\n");
     }
-  }
-  mu_puts("Program ended\r\n");
+*/  }
 }
+
+void irq_handler_core0(void){} // IRQ handler for core0

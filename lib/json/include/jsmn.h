@@ -25,6 +25,7 @@
 #define JSMN_H
 
 #include <stddef.h>
+#include "../../general/include/config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,8 +36,6 @@ extern "C" {
 #else
 #define JSMN_API extern
 #endif
-
-#define CHAR_BUFFER 100 // Buffer size for incoming JSON string
 
 /**
  * JSON type identifier. Basic types are:
