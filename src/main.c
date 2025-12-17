@@ -53,12 +53,17 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
 
   while (1) {
     uart_transmitter_loop();
+    char jsonString[CHAR_BUFFER]; // Uart buffer for receiving JSON string
     if (mu_read_line(jsonString, CHAR_BUFFER, 100000)) { // If a character is in the UART buffer, try to get the whole string, or timeout.
       mu_puts("> Parsing JSON string... : ");
       mu_puts(jsonString); // Print the received JSON string
       mu_puts("\r\n");
+      jsmn_parser p; // JSON parser
+      jsmntok_t t[CHAR_BUFFER]; // Array of tokens for JSON parsing
       jsmn_init(&p);
       int r = jsmn_parse(&p, (const char *)jsonString, strlen(jsonString), t, sizeof(t) / sizeof(t[0]));
+      mu_put_uint(r);
+      mu_puts(" tokens found.\r\n");
       if (r < 0) {
         mu_puts(">ERR Parsing JSON: ");
         switch (r) {
@@ -83,15 +88,20 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
         continue; // Wait for next JSON string
       }
       // Loop through all keys in the JSON object
-      for (int i = 1; i < r; i++) {
+      for (int i = 1; i < r; i+=2) {
         if (t[i].type == JSMN_STRING && t[i].size == 1) { // Check if the token is a string and has size 1
           char key[30]; // Buffer to hold the key string
-          if (t[i].end - t[i].start >= sizeof(key)) {
+          int len = t[i].end - t[i].start;
+          if (t[i].type != JSMN_STRING) {
+            mu_puts(">ERR Parsing JSON: Expected a string\r\n");
+            break;
+          }
+          if (len >= sizeof(key)) {
             mu_puts(">ERR Parsing JSON: Key is too long.\r\n");
             continue; // Skip to the next iteration of the loop
           }
-          strncpy(key, jsonString + t[i].start, t[i].end - t[i].start); // Copy the key string from the JSON string
-          key[t[i].end - t[i].start] = '\0'; // Null-terminate the string
+          strncpy(key, jsonString + t[i].start, len); // Copy the key string from the JSON string
+          key[len] = '\0';
           if (strcmp(key, "pulseWidth1") == 0) {
             Intervals[0] = strtoul(jsonString + t[i + 1].start, NULL, 10); // Convert the value to unsigned long and store it in the array
             INT_ARM_LOCAL_REGS->MBOX_SET04_REG = Intervals[0];

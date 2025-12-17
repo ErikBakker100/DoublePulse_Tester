@@ -92,9 +92,9 @@ int16_t mu_try_recv(void) {
     }
 }
 
-uint16_t mu_read_line(char *buf, uint16_t maxlen, uint32_t timeout) {
-    int i = 0, c;
-    unsigned int wait = 0;
+uint16_t mu_read_line(char * const buf, uint16_t maxlen, uint32_t timeout) {
+    int16_t i = 0, c;
+    uint32_t wait = 0;
     if(!(MU->MU_LSR_REG & 0x01)) return i; // No data to process
     while (i < maxlen - 1) {
         c = mu_try_recv();

@@ -22,7 +22,7 @@ void mu_putc(uint8_t c);
 void mu_puts(const char *s);
 uint8_t mu_getc(void);
 void mu_put_uint(uint32_t n);
-uint16_t mu_read_line(char *buf, uint16_t maxlen, uint32_t timeout);
+uint16_t mu_read_line(char * const buf, uint16_t maxlen, uint32_t timeout);
 void mu_put_hex32(uint32_t value);
 void mu_put_hex64(uint64_t value);
 void mu_put_bits32(uint32_t value);
