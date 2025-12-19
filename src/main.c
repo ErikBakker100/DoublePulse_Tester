@@ -30,10 +30,6 @@ unsigned long Intervals[4]={PW1, IPD, PW2, PI}; // Array to hold the intervals
 void core_main_0(uint32_t arg0, uint32_t arg1) {
   board_init(); // detecteer bord en stel mmio_base pointers in
   gpio_init(); // Initialize GPIO
-  char jsonString[CHAR_BUFFER]; // Uart buffer for receiving JSON string
-  jsmn_parser p; // JSON parser
-  jsmntok_t t[CHAR_BUFFER]; // Array of tokens for JSON parsing
-  jsmn_init(&p);
   mu_init(); // Initialize UART
   start_core1();
   mu_puts("**************Dual Pulse Generator**************\r\n");
@@ -89,6 +85,15 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
       }
       // Loop through all keys in the JSON object
       for (int i = 1; i < r; i+=2) {
+        mu_puts("> Processing token ");;
+        mu_put_uint(i);
+        mu_puts(": ");
+        mu_puts(jsonString + t[i].start);
+        mu_puts(" (size ");
+        mu_put_uint(t[i].size);
+        my_puts(") type: ");
+        mu_put_uint(t[i].type);
+        mu_puts("\r\n");
         if (t[i].type == JSMN_STRING && t[i].size == 1) { // Check if the token is a string and has size 1
           char key[30]; // Buffer to hold the key string
           int len = t[i].end - t[i].start;
