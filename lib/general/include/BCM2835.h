@@ -223,17 +223,17 @@ typedef struct {
     volatile uint32_t IRQ;              // 0x00 Auxiliary Interrupt status
     volatile uint32_t ENABLES;          // 0x04 Auxiliary enables
     uint32_t reserved1[14];
-    volatile uint32_t MU_IO_REG;        // 0x40 Mini Uart I/O Data
-    volatile uint32_t MU_IER_REG;
-    volatile uint32_t MU_IIR_REG;
-    volatile uint32_t MU_LCR_REG;
-    volatile uint32_t MU_MCR_REG;
-    volatile uint32_t MU_LSR_REG;
-    volatile uint32_t MU_MSR_REG;
-    volatile uint32_t MU_SCRATCH;
-    volatile uint32_t MU_CNTL_REG;
-    volatile uint32_t MU_STAT_REG;
-    volatile uint32_t MU_BAUD_REG;      // 0x68
+    volatile uint32_t MU_IO_REG;        // 0x40 I/O Data
+    volatile uint32_t MU_IER_REG;       // 0x44 Interrupt Enable
+    volatile uint32_t MU_IIR_REG;       // 0x48 Interrupt Identify/FIFO Enable
+    volatile uint32_t MU_LCR_REG;       // 0x4C Line Control
+    volatile uint32_t MU_MCR_REG;       // 0x50 Modem Control
+    volatile uint32_t MU_LSR_REG;       // 0x54 Line Status
+    volatile uint32_t MU_MSR_REG;       // 0x58 Modem Status
+    volatile uint32_t MU_SCRATCH;       // 0x5C Scratch
+    volatile uint32_t MU_CNTL_REG;      // 0x60 Control
+    volatile uint32_t MU_STAT_REG;      // 0x64 Status
+    volatile uint32_t MU_BAUD_REG;      // 0x68 Baudrate
 } mu_regs_t;
 extern volatile mu_regs_t *MU;          // Mini UART base address pointer
 

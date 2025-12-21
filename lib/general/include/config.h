@@ -27,4 +27,9 @@
     #define BAUDRATE 115200
 #endif
 
-#define CHAR_BUFFER 256 // Size of the UART buffer for JSON strings
+#define CHAR_BUFFER 100 // Size of the UART buffer for JSON strings
+
+#define DEFAULT_PULSE_WIDTH1 70      // in microseconds
+#define DEFAULT_INTER_PULSE_DELAY 30  // in microseconds
+#define DEFAULT_PULSE_WIDTH2 50      // in microseconds
+#define DEFAULT_PULSE_INTERVAL 500    // in microseconds

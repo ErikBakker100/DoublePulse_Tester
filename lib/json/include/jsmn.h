@@ -191,9 +191,7 @@ found:
 /**
  * Fills next token with JSON string.
  */
-static int jsmn_parse_string(jsmn_parser *parser, const char *js,
-                             const size_t len, jsmntok_t *tokens,
-                             const size_t num_tokens) {
+static int jsmn_parse_string(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t *tokens, const size_t num_tokens) {
   jsmntok_t *token;
 
   int start = parser->pos;
@@ -266,8 +264,7 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
 /**
  * Parse JSON string and fill tokens.
  */
-JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
-                        jsmntok_t *tokens, const unsigned int num_tokens) {
+JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t *tokens, const unsigned int num_tokens) {
   int r;
   int i;
   jsmntok_t *token;

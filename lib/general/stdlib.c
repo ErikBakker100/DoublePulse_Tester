@@ -55,3 +55,16 @@ void u32_to_str(uint32_t value, char *buf) {
     }
     buf[j] = '\0';  // nulterminator
 }
+
+void *memset(void *dst, int v, unsigned long n)
+{
+    unsigned char *p = dst;
+    while (n--) *p++ = (unsigned char)v;
+    return dst;
+}
+
+void delay(unsigned long count) {
+    while (count--) {
+        asm volatile("nop");
+    }
+}

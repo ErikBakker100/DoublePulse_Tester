@@ -5,10 +5,10 @@ void irq_handler_mailbox1_core1(void);
 void irq_handler_mailbox2_core1(void);
 void irq_handler_mailbox3_core1(void);
 
-unsigned long delay1 = 0; // holds Pulse Width1 delay
-unsigned long delay2 = 0; // holds Inter Pulse width delay
-unsigned long delay3 = 0; // holds Pulse Width2 delay
-unsigned long delay4 = 0; // holds Pulse Interval delay
+unsigned long delay1 = DEFAULT_PULSE_WIDTH1; // holds Pulse Width1 delay
+unsigned long delay2 = DEFAULT_INTER_PULSE_DELAY; // holds Inter Pulse width delay
+unsigned long delay3 = DEFAULT_PULSE_WIDTH2; // holds Pulse Width2 delay
+unsigned long delay4 = DEFAULT_PULSE_INTERVAL; // holds Pulse Interval delay
 
 /*
 // Start core1
