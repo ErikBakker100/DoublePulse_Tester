@@ -71,48 +71,40 @@ int mu_try_recv(void) {
     }
 }
 
-static inline uint32_t timer_us(void)
-{
+static inline uint32_t timer_us(void) {
     return TMR->CLO;
 }
 
-uint16_t mu_read_json(char * const buf, uint16_t maxlen, uint32_t timeout) {
+uint16_t mu_read_json(char * const buf, uint16_t maxlen, uint32_t timeout_us) {
     uint32_t start = timer_us();
-    int c = 0, depth = 0;
-    uint32_t start = timer_us();
+    int16_t depth = 0;
     uint16_t i = 0;
     bool started = false;
-    while (i < maxlen - 1) {
-        c = mu_try_recv();
-        if (c == -1) {
-            if (wait++ >= timeout) {
-                break; // Timeout
+    while ((timer_us() - start) < timeout_us) {
+        int16_t c = mu_try_recv();
+        if (c < 0) continue;
+        if (!started) {
+            if (c == '{') {
+                started = true;
+                depth = 1;
+                buf[i++] = '{';
             }
-            continue;
-        } else {
-            if (!started) {
-                if (c == '{') {
-                    started = true;
-                    buf[i++] = c;
-                }
-                continue;
-            }        
-            if (c < 0x20 || c > 0x7E) {
-                if (wait++ >= timeout) {
-                    break; // Timeout
-                }
-                continue;
-            }
-            if (c == '}') {
-                buf[i++] = (char)c;
-                break;
-            }
-            buf[i++] = (char)c;
-            wait = 0;
+            continue;        
+        }
+        if (i >= maxlen - 1) break; // Buffer full        
+        buf[i++] = (char)c;
+
+        if (c == '{') depth++;
+        if (c == '}') depth--;
+
+        if (depth == 0) {
+            buf[i] = '\0';
+            return i;
         }
     }
-    buf[i] = '\0';
-    return i;
+    // Timeout or overflow → reset
+    buf[0] = '\0';
+    return 0;
 }
 
 void mu_put_hex32(const uint32_t value) {
