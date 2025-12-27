@@ -7,9 +7,12 @@
 #include "../../general/include/BCM2835.h"
 #include "../../general/include/config.h"
 #include "../../gpio/include/gpio.h"
+#include "../../irq/include/irq.h"
 
 void core_main_1(void); // Function to be executed by core1 after start
 void start_core1(void); // Set entry point for core1
 extern void core_entry_1(void); // Entry point defined in startxx.s
-void irq_handler_core1(void); // IRQ handler for core1
-void irq_init_core1(void); // Initialize IRQs for core1
+void mailbox0_core1(uint32_t);
+void mailbox1_core1(uint32_t);
+void mailbox2_core1(uint32_t);
+void mailbox3_core1(uint32_t);

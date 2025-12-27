@@ -14,15 +14,20 @@ void gpio_init_pin(uint8_t pin, uint8_t mode) {
 }
 
 void gpio_set(uint32_t pin) {
-    if (pin < 32)
-        GPIO->SET[0] = (1u << pin);
-    else
-        GPIO->SET[1] = (1u << (pin - 32));
-}
+    uint8_t reg_index = pin / 32;          // Elk register behandelt 32 pins    
+    uint32_t mask = 1u << (pin % 32);
+    GPIO->SET[reg_index] = mask;
+    }
 
 void gpio_clear(uint32_t pin) {
-    if (pin < 32)
-        GPIO->CLR[0] = (1u << pin);
-    else
-        GPIO->CLR[1] = (1u << (pin - 32));
+    uint8_t reg_index = pin / 32;          // Elk register behandelt 32 pins    
+    uint32_t mask = 1u << (pin % 32);
+    GPIO->CLR[reg_index] = mask;
+}   
+
+void gpio_toggle(uint32_t pin) {
+    uint8_t reg_index = pin / 32;          // Elk register behandelt 32 pins    
+    uint32_t mask = 1u << (pin % 32);
+    if (GPIO->LEV[reg_index] & mask) GPIO->CLR[reg_index] = mask;
+    else GPIO->SET[reg_index] = mask;
 }

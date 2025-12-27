@@ -1,10 +1,5 @@
 #include "include/core1.h"
 
-void irq_handler_mailbox0_core1(void);
-void irq_handler_mailbox1_core1(void);
-void irq_handler_mailbox2_core1(void);
-void irq_handler_mailbox3_core1(void);
-
 unsigned long delay1 = DEFAULT_PULSE_WIDTH1; // holds Pulse Width1 delay
 unsigned long delay2 = DEFAULT_INTER_PULSE_DELAY; // holds Inter Pulse width delay
 unsigned long delay3 = DEFAULT_PULSE_WIDTH2; // holds Pulse Width2 delay
@@ -100,54 +95,18 @@ void core_main_1() {
 */
 }
 
-void irq_init_core1(void) {
-    // Disable interrupts
-    irq_disable();
-    // Clear all mailbox interrupts
-    INT_ARM_LOCAL_REGS->MBOX_CLR04_REG = 0xFFFFFFFF; // Wis alle bits in mailbox 1 van core1
-    INT_ARM_LOCAL_REGS->MBOX_CLR05_REG = 0xFFFFFFFF; // Wis alle bits in mailbox 2 van core1
-    INT_ARM_LOCAL_REGS->MBOX_CLR06_REG = 0xFFFFFFFF; // Wis alle bits in mailbox 3 van core1
-    INT_ARM_LOCAL_REGS->MBOX_CLR07_REG = 0xFFFFFFFF; // Wis alle bits in mailbox 4 van core1
-    // Enable mailbox interrupts for this core
-    INT_ARM_LOCAL_REGS->MAILBOX_CNTRL1_REG = (MBOX0_IRQ | MBOX1_IRQ | MBOX2_IRQ | MBOX3_IRQ); // IRQ's voor alle mailboxen van core1 enabelen.
-    // ensure writes reach device before we enable interrupts
-    __asm__ volatile ("dsb sy":::"memory");
-    __asm__ volatile ("isb":::"memory");
-    // Enable interrupts
-    irq_enable();
+void mailbox0_core1(uint32_t delay) {
+    delay1 = delay;
 }
 
-void irq_handler_core1(void) {
-    if(INT_ARM_LOCAL_REGS->IRQ_SOURCE1_REG && INT_SRC_MBOX0) {
-        irq_handler_mailbox0_core1();
-        INT_ARM_LOCAL_REGS->MBOX_CLR04_REG = 0xFFFFFFFF; // Wis de gelezen bits, en clear de IRQ daarmee
-    }
-    if(INT_ARM_LOCAL_REGS->IRQ_SOURCE1_REG && INT_SRC_MBOX1) {
-        irq_handler_mailbox1_core1();
-        INT_ARM_LOCAL_REGS->MBOX_CLR05_REG = 0xFFFFFFFF; // Wis de gelezen bits, en clear de IRQ daarmee
-    }
-    if(INT_ARM_LOCAL_REGS->IRQ_SOURCE1_REG && INT_SRC_MBOX2) {
-        irq_handler_mailbox2_core1();
-        INT_ARM_LOCAL_REGS->MBOX_CLR06_REG = 0xFFFFFFFF; // Wis de gelezen bits, en clear de IRQ daarmee
-    }
-    if(INT_ARM_LOCAL_REGS->IRQ_SOURCE1_REG && INT_SRC_MBOX3) {
-        irq_handler_mailbox3_core1();
-        INT_ARM_LOCAL_REGS->MBOX_CLR07_REG = 0xFFFFFFFF; // Wis de gelezen bits, en clear de IRQ daarmee
-    }
+void mailbox1_core1(uint32_t delay) {
+    delay2 = delay;
 }
 
-void irq_handler_mailbox0_core1(void) {
-    delay1 = INT_ARM_LOCAL_REGS->MBOX_CLR04_REG;
+void mailbox2_core1(uint32_t delay) {
+    delay3 = delay;
 }
 
-void irq_handler_mailbox1_core1(void) {
-    delay2 = INT_ARM_LOCAL_REGS->MBOX_CLR05_REG;
-}
-
-void irq_handler_mailbox2_core1(void) {
-    delay3 = INT_ARM_LOCAL_REGS->MBOX_CLR06_REG;
-}
-
-void irq_handler_mailbox3_core1(void) {
-    delay4 = INT_ARM_LOCAL_REGS->MBOX_CLR07_REG;
+void mailbox3_core1(uint32_t delay) {
+    delay4 = delay;
 }

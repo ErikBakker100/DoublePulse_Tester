@@ -4,13 +4,14 @@
 
 #include "../lib/general/include/config.h"
 #include "../lib/general/include/rpi.h"
-#include "../lib/general/include/stdlib.h" // Include standard library for string functions, TO DO check with minuart functions, extract string functions form minuart
+#include "../lib/general/include/stdlib.h"  // Include standard library for string functions, TO DO check with minuart functions, extract string functions form minuart
 #include "../lib/gpio/include/gpio.h"
 #include "../lib/uart/include/miniuart.h"
 #include "../lib/json/include/jsmn.h"
 #include "../lib/multi_core/include/core1.h"
 #include "../lib/general/include/BCM2835.h"
 #include "../lib/general/include/BCM2836.h"
+#include "../lib/irq/include/irq.h"
 
 // Timing Variables
 //  _____________                   ____________
@@ -18,18 +19,19 @@
 //                _________________              _______________
 
 // Set default 
-#define PW1 70 // Pulse Width, starts with 0,5 usec, 80nsec resolution, so 
-#define IPD 30 // Inter Pulse width, starts with 0,4 usec
-#define PW2 50 // Pulse Width 2, starts with 0,5 usec
-#define PI 500 // Pulse Interval, starts with 1,2usec
+#define PW1 70                              // Pulse Width, starts with 0,5 usec, 80nsec resolution, so 
+#define IPD 30                              // Inter Pulse width, starts with 0,4 usec
+#define PW2 50                              // Pulse Width 2, starts with 0,5 usec
+#define PI 500                              // Pulse Interval, starts with 1,2usec
 unsigned long Intervals[4]={PW1, IPD, PW2, PI}; // Array to hold the intervals
+static char jsonString[CHAR_BUFFER] = {0};  // Uart buffer for receiving JSON string
 // Core0 is reponsible for updating parameters and communicating with the outside
 // Core1 is generating the pulses based on the values in 'Intervals[]'
 
 void core_main_0(uint32_t arg0, uint32_t arg1) {
-  board_init(); // detecteer bord en stel mmio_base pointers in
-  gpio_init(); // Initialize GPIO
-  mu_init(); // Initialize UART
+  board_init();                             // detecteer bord en stel mmio_base pointers in
+  gpio_init();                              // Initialize GPIO
+  mu_init();                                // Initialize UART
   start_core1();
   mu_puts("> **************Dual Pulse Generator**************\r\n");
   mu_puts("> Usage: Send JSON string, for e.g {\"pulseWidth1\": 70, \"interPulseDelay\": 30, \"pulseWidth2\": 50, \"pulseInterval\": 500}.\r\n");
@@ -40,16 +42,16 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts("> | pulseWidth1 | interPulseDelay | pulseWith2 | pulseInterval |\r\n");
   mu_puts(">      70       ______ 30 _________     50     ______ 500_______\r\n");
 
-  static char jsonString[CHAR_BUFFER] = {0}; // Uart buffer for receiving JSON string
+  mu_flush_rx();                            // Clear RX FIFO before starting main loop 
+  gpio_init_pin(21, GPIO_OUT);              // Set GPIO 21 voor test doeleinden
+  irq_init_core0();                         // Initialize IRQs for core0
 
   while (1) {
-    jsonString[0] = '\0'; // Clear the JSON string buffer
-    if (mu_read_json(jsonString, CHAR_BUFFER, 100000)) { // If a character is in the UART buffer, try to get the whole string, or timeout.
-      mu_puts("> Parsing JSON string: ");
-      mu_puts(jsonString); // Print the received JSON string
+    if (mu_read_json(jsonString, CHAR_BUFFER, (100000))) { // If a character is in the UART buffer, try to get the whole string, or timeout (at 115200 one byte is ~87usec).
+      mu_puts(jsonString);                  // Print the received JSON string
       mu_puts("\r\n");
-      jsmn_parser p; // JSON parser
-      jsmntok_t t[10]; // Array of tokens for JSON parsing
+      jsmn_parser p;                        // JSON parser
+      jsmntok_t t[10];                      // Array of tokens for JSON parsing
       jsmn_init(&p);
       int r = jsmn_parse(&p, (const char *)jsonString, strlen(jsonString), t, sizeof(t) / sizeof(t[0]));
       if (r < 0) {
@@ -68,48 +70,48 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
             mu_puts("Unknown error.\r\n");
             continue;
         }
-        continue; // Skip to the next iteration of the loop
+        continue;                           // Skip to the next iteration of the loop
       }
       // Assume the top-level element is an object
       if (t[0].type != JSMN_OBJECT) {
         mu_puts(">ERR Parsing JSON: The top-level element is not an object.\r\n");
-        continue; // Wait for next JSON string
+        continue;                           // Wait for next JSON string
       }
       // Loop through all keys in the JSON object
       for (int i = 1; i < r; i++) {
         if (t[i].type == JSMN_STRING && t[i].size == 1) { // Check if the token is a string and has size 1
-          char key[30]; // Buffer to hold the key string
+          char key[30];                     // Buffer to hold the key string
           if (t[i].type != JSMN_STRING) {
             mu_puts(">ERR Parsing JSON: Expected a string\r\n");
             continue;
           }
           if (t[i].end - t[i].start >= sizeof(key)) {
             mu_puts(">ERR Parsing JSON: Key is too long.\r\n");
-            continue; // Skip to the next iteration of the loop
+            continue;                       // Skip to the next iteration of the loop
           }
           strncpy(key, (jsonString + t[i].start), (t[i].end - t[i].start)); // Copy the key string from the JSON string
           key[t[i].end - t[i].start] = '\0'; // Null-terminate the key string
           if (strcmp(key, "pulseWidth1") == 0) {
             Intervals[0] = strtoul(jsonString + t[i + 1].start, NULL, 10); // Convert the value to unsigned long and store it in the array
-            INT_ARM_LOCAL_REGS->MBOX_SET04_REG = Intervals[0];
+            INT_ARM_LOCAL->MBOX_SET04 = Intervals[0];
             mu_puts("> pulseWidth1 set to: ");
             mu_put_uint(Intervals[0]);
             mu_puts("\r\n");
           } else if (strcmp(key, "interPulseDelay") == 0) {
             Intervals[1] = strtoul(jsonString + t[i + 1].start, NULL, 10);
-            INT_ARM_LOCAL_REGS->MBOX_SET05_REG = Intervals[1];
+            INT_ARM_LOCAL->MBOX_SET05 = Intervals[1];
             mu_puts("> interPulseDelay set to: ");
             mu_put_uint(Intervals[1]);
             mu_puts("\r\n");
           } else if (strcmp(key, "pulseWidth2") == 0) {
             Intervals[2] = strtoul(jsonString + t[i + 1].start, NULL, 10);
-            INT_ARM_LOCAL_REGS->MBOX_SET06_REG = Intervals[2];
+            INT_ARM_LOCAL->MBOX_SET06 = Intervals[2];
             mu_puts("> pulseWidth2 set to: ");
             mu_put_uint(Intervals[2]);
             mu_puts("\r\n");
           } else if (strcmp(key, "pulseInterval") == 0) {
             Intervals[3] = strtoul(jsonString + t[i + 1].start, NULL, 10);
-            INT_ARM_LOCAL_REGS->MBOX_SET07_REG = Intervals[3];
+            INT_ARM_LOCAL->MBOX_SET07 = Intervals[3];
             mu_puts("> pulseInterval set to: ");
             mu_put_uint(Intervals[3]);
             mu_puts("\r\n");
@@ -123,5 +125,3 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
     }
   }
 }
-
-void irq_handler_core0(void){} // IRQ handler for core0

@@ -3,21 +3,14 @@
 .section .text._start, "ax"
 .extern core_main_0
 .extern core_main_1
-.extern core_main_2
-.extern core_main_3
 
 .globl _start
 .globl core_entry_1
 .globl core_entry_2
-.globl core_entry_3
 .extern irq_handler_0
 .extern irq_handler_1
-.extern irq_handler_2
-.extern irq_handler_3
 .extern __stack_el1_top_core0
 .extern __stack_el1_top_core1
-.extern __stack_el1_top_core2
-.extern __stack_el1_top_core3
 
 // -----------------------------------------------------
 //  Entry point voor Core0
@@ -36,7 +29,7 @@ bss_clear_loop:
 	b.gt    bss_clear_loop          // b.ge (Greater or Equal) springt als x0 >= x1 (signed). b.gt (Greater Than) springt als x0 > x1 (signed).
 
 // -----------------------------------------------------
-// Entry voor Core0–3
+// Entry voor Core0–1
 // -----------------------------------------------------
 .macro	core_entry_x	core
 core_entry_\core:
@@ -90,10 +83,9 @@ el1_entry_core\core:
 
 core_entry_x 0
 core_entry_x 1
-core_entry_x 2
 
 // ---------------------------------------------------------
-// AArch64 Vector Tables (EL1) voor core 0-3
+// AArch64 Vector Tables (EL1) voor core 0-1
 // ---------------------------------------------------------
 // Vector table macro
 // ---------------------------------------------------------
@@ -130,7 +122,6 @@ vector_table_\core:
 
 vector_table_x 0
 vector_table_x 1
-vector_table_x 2
 
 // -----------------------------------------------------
 // IRQ handlers for cores 0–2
@@ -192,11 +183,6 @@ irq_entry_0:
 irq_entry_1:
     kernel_entry
     bl      irq_handler_core1
-    kernel_exit
-
-irq_entry_2:
-    kernel_entry
-    bl      irq_handler_core2
     kernel_exit
 
 // -----------------------------------------------------

@@ -27,7 +27,8 @@
     #define BAUDRATE 115200
 #endif
 
-#define CHAR_BUFFER 100 // Size of the UART buffer for JSON strings
+#define CHAR_BUFFER 100 // Max size of the JSON string
+#define RX_BUF_SIZE 256 // Size of the RX buffer for UART reception
 
 #define DEFAULT_PULSE_WIDTH1 70      // in microseconds
 #define DEFAULT_INTER_PULSE_DELAY 30  // in microseconds

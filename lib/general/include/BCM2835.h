@@ -10,7 +10,7 @@ typedef struct {
     volatile uint32_t CHI;                  // 0x08 System Timer Counter Higher 32 bits
     volatile uint32_t C[4];                 // 0x0C-0x18 System Timer Compare 0-3
 } sys_timer_regs_t;
-extern volatile sys_timer_regs_t *TMR;
+extern volatile sys_timer_regs_t *SYS_TMR;
 
 //
 // Interrupt, base address at mmio_base + 0x00B200
@@ -59,8 +59,6 @@ typedef struct {
     volatile uint32_t FREE_RUNNING_CNT;     // 0x20 Free running counter
 } arm_timer_regs_t;
 extern volatile arm_timer_regs_t *ARM_TMR;
-
-
 
 //
 // 3 x Clock Manager General Purpose Clocks Control, base address at mmio_base + 0x101070
@@ -159,7 +157,7 @@ typedef struct {
     volatile uint32_t LTOH;        // 0x10 Lossi TOH
     volatile uint32_t DC;          // 0x14 DMA DREQ Controls
 }spi_regs_t;
-extern volatile spi_regs_t *SPI;
+extern volatile spi_regs_t *SPI0;
 
 //
 // I2C1, base address at mmio_base + 0x205000
@@ -217,51 +215,56 @@ typedef struct {
 extern volatile i2c_spi_slave_regs_t *I2C_SPI_SLAVE;
 
 //
-// Mini UART, base address at mmio_base + 0x215000
+// AUX registers, base address at mmio_base + 0x215000
 //
 typedef struct {
     volatile uint32_t IRQ;              // 0x00 Auxiliary Interrupt status
     volatile uint32_t ENABLES;          // 0x04 Auxiliary enables
-    uint32_t reserved1[14];
-    volatile uint32_t MU_IO_REG;        // 0x40 I/O Data
-    volatile uint32_t MU_IER_REG;       // 0x44 Interrupt Enable
-    volatile uint32_t MU_IIR_REG;       // 0x48 Interrupt Identify/FIFO Enable
-    volatile uint32_t MU_LCR_REG;       // 0x4C Line Control
-    volatile uint32_t MU_MCR_REG;       // 0x50 Modem Control
-    volatile uint32_t MU_LSR_REG;       // 0x54 Line Status
-    volatile uint32_t MU_MSR_REG;       // 0x58 Modem Status
+} aux_regs_t;
+extern volatile aux_regs_t *AUX;
+
+//
+// Mini UART, base address at mmio_base + 0x215040
+//
+typedef struct {
+    volatile uint32_t MU_IO;        // 0x40 I/O Data
+    volatile uint32_t MU_IER;       // 0x44 Interrupt Enable
+    volatile uint32_t MU_IIR;       // 0x48 Interrupt Identify/FIFO Enable
+    volatile uint32_t MU_LCR;       // 0x4C Line Control
+    volatile uint32_t MU_MCR;       // 0x50 Modem Control
+    volatile uint32_t MU_LSR;       // 0x54 Line Status
+    volatile uint32_t MU_MSR;       // 0x58 Modem Status
     volatile uint32_t MU_SCRATCH;       // 0x5C Scratch
-    volatile uint32_t MU_CNTL_REG;      // 0x60 Control
-    volatile uint32_t MU_STAT_REG;      // 0x64 Status
-    volatile uint32_t MU_BAUD_REG;      // 0x68 Baudrate
+    volatile uint32_t MU_CNTL;      // 0x60 Control
+    volatile uint32_t MU_STAT;      // 0x64 Status
+    volatile uint32_t MU_BAUD;      // 0x68 Baudrate
 } mu_regs_t;
 extern volatile mu_regs_t *MU;          // Mini UART base address pointer
 
 //
-// SPI1, Universal SPI Master, base address at mmio_base + 0x215000 + 0x80
-//
-typedef struct {
-    volatile uint32_t SPI0_CNTL0_REG;   // 0x80 SPI 1 Control register 0
-    volatile uint32_t SPI0_CNTL1_REG;   // 0x84 SPI 1 Control register 1
-    volatile uint32_t SPI0_STAT_REG;    // 0x88 SPI 1 Status register
-    uint32_t reserved3[1];
-    volatile uint32_t SPI0_IO_REG;      // 0x90 SPI 1 Data
-    volatile uint32_t SPI0_PEEK_REG;    // 0x94 SPI 1 Peek
-} spi1_regs_t;
-extern volatile spi1_regs_t *SPI1;      // SPI 1 base address pointer
-
-//
+// SPI1, Universal SPI Master, base address (BA) at mmio_base + 0x215000 + 0x80
 // SPI2, base address at mmio_base + 0x215000 + 0xC0
 //
 typedef struct {
-    volatile uint32_t SPI1_CNTL0_REG;   // 0xC0 SPI 2 Control register 0
-    volatile uint32_t SPI1_CNTL1_REG;   // 0xC4 SPI 2 Control register 1
-    volatile uint32_t SPI1_STAT_REG;    // 0xC8 SPI 2 Status register
-    uint32_t reserved5[1];
-    volatile uint32_t SPI1_IO_REG;      // 0xD0 SPI 2 Data
-    volatile uint32_t SPI1_PEEK_REG;    // 0xD4 SPI 2 Peek
+    volatile uint32_t SPI1_CNTL0;   // BA+0x0 SPI Control register 0
+    volatile uint32_t SPI1_CNTL1;   // BA+0x4 SPI 1 Control register 1
+    volatile uint32_t SPI1_STAT;    // BA+0x8 SPI 1 Status register
+    volatile uint32_t SPI1_PEEK;    // BA+0xC SPI 1 Peek
+    uint32_t reserved1[4];          // BA+0x10-0x1C Reserved
+    volatile uint32_t SPI1_IO[3];   // BA+0x20-0x2C SPI 1 Data
+    volatile uint32_t SPI1_TXHOLD[3]; // BA+0x30-0x3C SPI 1 TX Hold
+} spi12_regs_t;
+extern volatile spi12_regs_t *SPI1;      // SPI 1 base address pointer
+extern volatile spi12_regs_t *SPI2;      // SPI 2 base address pointer
+
+typedef struct {
+    volatile uint32_t SPI2_CNTL0;   // 0xC0 SPI 2 Control register 0
+    volatile uint32_t SPI2_CNTL1;   // 0xC4 SPI 2 Control register 1
+    volatile uint32_t SPI2_STAT;    // 0xC8 SPI 2 Status register
+    volatile uint32_t SPI2_PEEK;    // 0xCC SPI 2 Peek
+    uint32_t reserved1[4];
+    volatile uint32_t SPI2_IO[3];      // 0xD0-0xDC SPI 2 Data
 } spi2_regs_t;
-extern volatile spi2_regs_t *SPI2;      // SPI 2 base address pointer
 
 //
 // External Mass Media Controller (SD Card), base address at mmio_base + 0x300000

@@ -8,9 +8,7 @@
 #define GPIO_OUT	1
 
 void gpio_init();
-
 void gpio_init_pin(uint8_t pin, uint8_t mode);
-
 void gpio_set(uint32_t pin) ;
-
 void gpio_clear(uint32_t pin);
+void gpio_toggle(uint32_t pin);

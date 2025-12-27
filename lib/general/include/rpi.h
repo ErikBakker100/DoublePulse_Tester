@@ -22,3 +22,4 @@ void irq_disable(void);
 void irq_enable(void);
 void fiq_disable(void);
 void fiq_enable(void);
+void clearBss(void);

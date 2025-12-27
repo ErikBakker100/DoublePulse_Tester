@@ -43,6 +43,7 @@ rpi_board_t rpi_board = {
 };
 
 void board_init(void) {
+    clearBss();
     get_board_info();
     BCM2835_Init(rpi_board.mmio_base);
     BCM2836_Init(rpi_board.mmio_base);
@@ -96,4 +97,17 @@ void get_board_info() {
             rpi_board.mmio_base = 0x20000000UL;
             break;
     }
+}
+
+void clearBss(void) {
+  extern void *__bss_start;
+  extern void *__bss_end;
+
+  unsigned int *p;
+  unsigned int *start = (unsigned int *)&__bss_start;
+  unsigned int *end = (unsigned int *)&__bss_end;
+
+  for (p = start; p < end; p++) {
+    *p = 0x00;
+  }
 }
