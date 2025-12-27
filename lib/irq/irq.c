@@ -3,11 +3,11 @@
 #include "../uart/include/miniuart.h"
 #include "../gpio/include/gpio.h"
 
-void timer_test_irq(void)
+void timer_hart_beat(void)
 {
     uint32_t t = SYS_TMR->CLO;
-    SYS_TMR->C[1] = (t + 5000000);   // 5s
-    mu_puts("> Timer set\r\n");
+    SYS_TMR->C[1] = (t + 500000);   // 0,5s
+    gpio_toggle(21); // toggle hart beat indicator
 }
 
 // **********************************************************************************
@@ -35,42 +35,27 @@ void irq_init_core0(void) {
     __asm__ volatile ("dsb sy":::"memory");
     __asm__ volatile ("isb":::"memory");
     // Enable interrupts
-    timer_test_irq();                     // start timer IRQ for testing
+    timer_hart_beat();                     // start timer IRQ for testing
     irq_enable();
  }
 
 void irq_handler_core0(void){
-    // Mini UART RX interrupt?
-    gpio_toggle(21);   // wanneer de code hier komt dat wordt de irq geactiveerd, laat zien door de gpio te togglen
-    mu_puts("> IRQ: ");
-    mu_put_bits16(INT->IRQ_BASIC_PENDING);
-    mu_putc(' ');
-    mu_put_bits16(INT->IRQ_PENDING[0]);
-    mu_putc(' ');
-    mu_put_bits16(INT->IRQ_PENDING[1]);
-    mu_putc(' ');
-    mu_put_bits16(AUX->IRQ);
-    mu_puts("\r\n");
+
     if (AUX->IRQ & 1) {  // Mini UART interrupt
         if (MU->MU_IIR & 0x04) {            // Receiver holds valid byte
             while (MU->MU_LSR & 0x01) {
                 gpio_toggle(21);   // wanneer de code hier komt dan worden bytes ontvangen, laat zien door de gpio te togglen
                 char c = MU->MU_IO & 0xFF;
                 rx_put(c);
+                gpio_toggle(21);   // wanneer de code hier komt dan worden bytes ontvangen, laat zien door de gpio te togglen
             }
         }   
-    }
-    if (MU->MU_LSR & 0x01) { // Data available in RX FIFO
-        while (MU->MU_LSR & 0x01) {
-            char c = MU->MU_IO & 0xFF;
-            rx_put(c);
-        }
     }
     // SYSTEM Timer interrupt?
     if (SYS_TMR->CS & (1 << 1)) { // Timer 1 interrupt
         SYS_TMR->CS = (1 << 1); // Acknowledge the timer interrupt
     }
-    timer_test_irq();       // restart timer for next interrupt
+    timer_hart_beat();       // restart timer
 }
 
 // **********************************************************************************

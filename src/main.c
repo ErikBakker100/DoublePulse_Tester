@@ -43,7 +43,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts(">      70       ______ 30 _________     50     ______ 500_______\r\n");
 
   mu_flush_rx();                            // Clear RX FIFO before starting main loop 
-  gpio_init_pin(21, GPIO_OUT);              // Set GPIO 21 voor test doeleinden
+  gpio_init_pin(21, GPIO_OUT);              // Set GPIO 21 voor hart beat indication
   irq_init_core0();                         // Initialize IRQs for core0
 
   while (1) {

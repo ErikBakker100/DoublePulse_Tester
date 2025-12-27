@@ -2,7 +2,7 @@
 #include "../../general/include/BCM2835.h"
 #include "../../general/include/BCM2836.h"
 
-void timer_test_irq(void);
+void timer_hart_beat(void);
 
 // IRQ handlers for core0
 void irq_init_core0(void);

@@ -21,7 +21,6 @@ void mu_init() {
     GPIO->PUDCLK[0] = 0;
     mu_flush_rx();              // Clear RX FIFO
     MU->MU_CNTL = 3;            // Enable TX and RX
-    MU->MU_IER  = ((1 << 0) | (1 << 2) | (1 << 3));     // mini UART RX interrupt enable, BCM2835 errata stelt dat bit 3:2 moeten worden ingesteld voor RX interrupt
 }
 
 // **********************************************************************************
