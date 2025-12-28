@@ -3,24 +3,47 @@ cmake_minimum_required(VERSION 3.17)
 # ----------------------
 # Gebruikersopties
 # ----------------------
-set(ARCH "" CACHE STRING "Target architecture: arm32 or arm64")
+set(ARCH "arm64" CACHE STRING "Target architecture: arm32 or arm64")
 set_property(CACHE ARCH PROPERTY STRINGS arm32 arm64)
 
-set(RPI_MODEL "" CACHE STRING "Raspberry Pi model: Z1, Z2, 4B")
+set(RPI_MODEL "Z2" CACHE STRING "Raspberry Pi model: Z1, Z2, 4B")
 set_property(CACHE RPI_MODEL PROPERTY STRINGS Z1 Z2 4B)
+
+set(DUALCORE "on" CACHE STRING "Dual core support: on or off")
+set_property(CACHE DUALCORE PROPERTY STRINGS on off)
 
 set(SDCARD_DIR ${CMAKE_SOURCE_DIR}/sdcard)
 
-if(NOT ARCH)
-    message(FATAL_ERROR "ARCH moet arm32 of arm64 zijn. Kies met: -DARCH=arm32 of -DARCH=arm64")
-elseif(NOT (ARCH STREQUAL "arm32" OR ARCH STREQUAL "arm64"))
+if(ARCH STREQUAL "arm64")
+    message(STATUS "arm64 build enabled")
+else()
+    message(STATUS "arm32 build enabled")
+endif()
+
+if(RPI_MODEL STREQUAL "Z2")
+    message(STATUS "Building for Raspberry Pi Zero 2(W)")
+elseif(RPI_MODEL STREQUAL "Z1")
+    message(STATUS "Building for Raspberry Pi Zero 1")
+elseif(RPI_MODEL STREQUAL "4B")
+    message(STATUS "Building for Raspberry Pi 4B")
+endif()
+
+if(DUALCORE STREQUAL "on")
+    message(STATUS "Dual-core build enabled")
+else()
+    message(STATUS "Single-core build")
+endif()
+
+if(NOT (ARCH STREQUAL "arm32" OR ARCH STREQUAL "arm64"))
     message(FATAL_ERROR "Ongeldige waarde voor ARCH: ${ARCH}. Kies uit: arm32, arm64")
 endif()
 
-if(NOT RPI_MODEL)
-    message(FATAL_ERROR "RPI_MODEL moet Z1, Z2 of 4B zijn. Kies met: -DRPI_MODEL=Z1 of -DRPI_MODEL=Z2 of -DRPI_MODEL=4B")
-elseif(NOT (RPI_MODEL STREQUAL "Z1" OR RPI_MODEL STREQUAL "Z2" OR RPI_MODEL STREQUAL "4B"))
+if(NOT (RPI_MODEL STREQUAL "Z1" OR RPI_MODEL STREQUAL "Z2" OR RPI_MODEL STREQUAL "4B"))
     message(FATAL_ERROR "Ongeldige waarde voor RPI_MODEL: ${RPI_MODEL}. Kies uit: Z1, Z2, 4B")
+endif()
+
+if(NOT (DUALCORE STREQUAL "on" OR DUALCORE STREQUAL "off"))
+    message(FATAL_ERROR "Ongeldige waarde voor DUALCORE: ${DUALCORE}. Kies uit: on, off")
 endif()
 
 # ----------------------
@@ -28,6 +51,10 @@ endif()
 # ----------------------
 if(RPI_MODEL STREQUAL "Z1" AND NOT ARCH STREQUAL "arm32")
     message(FATAL_ERROR "Raspberry Pi Zero 1 (Z1) ondersteunt alleen ARCH=arm32")
+endif()
+
+if(RPI_MODEL STREQUAL "Z1" AND NOT DUALCORE STREQUAL "off")
+    message(FATAL_ERROR "Raspberry Pi Zero 1 (Z1) is een single core device, alleen DUALCORE=off is mogelijk.")
 endif()
 
 # ----------------------
