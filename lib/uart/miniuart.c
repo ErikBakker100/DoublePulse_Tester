@@ -19,7 +19,6 @@ void mu_init() {
     GPIO->PUDCLK[0] = (1 << 14) | (1 << 15);
     delay(150);
     GPIO->PUDCLK[0] = 0;
-    mu_flush_rx();              // Clear RX FIFO
     MU->MU_CNTL = 3;            // Enable TX and RX
 }
 
@@ -138,62 +137,23 @@ int16_t rx_get(void) {
     RX_BUF->tail = (RX_BUF->tail + 1) % RX_BUF_SIZE;
     return c;
 }
-/*
-char mu_getc(void) {
-    // Wacht tot er data beschikbaar is in de RX FIFO (bit 0 = data ready)
-    do{asm volatile("nop");} while (!(MU->MU_LSR & 0x01));   // 0x41 = 0xb100 0001 = FIFO holds at least one symbol, and transmitter empty, 0x01 = data ready
-    // Lees de byte (laagste 8 bits)
-    return (char)(MU->MU_IO & 0xFF);
-}
-
-int mu_try_recv(void) {
-    if (MU->MU_LSR & 0x01) {    // Data beschikbaar
-        return MU->MU_IO & 0xFF;
-    } else {
-        return -1; // Geen data beschikbaar
-    }
-}
-*/
 
 uint16_t mu_read_json(char * const buf, uint16_t maxlen, uint32_t timeout_us) {
 
-    int16_t depth = 0;
     uint16_t i = 0;
-    bool started = false;
     SYS_TMR->C[3] = (SYS_TMR->CLO + timeout_us); // set timeout
 
     buf[0] = '\0';
 
     while (!(SYS_TMR->CS & (1 << 3)) && (i < maxlen - 1)) { // while no timeout and buffer not full
         if (!rx_available()) continue;
- 
         int16_t c = rx_get();
         if (c < 0) continue;
 
-        if (!started) {
-            if (c == '{') {
-                started = true;
-                depth = 1;
-                buf[i++] = '{';
-            }
-            continue;        
-        }
         buf[i++] = (char)c;
-        if (c == '{') depth++;
-        if (c == '}') depth--;
-        if (depth < 0) {
-            buf[0] = '\0';
-            mu_puts("> ERR Parsing JSON: Unmatched closing brace.\r\n");
-            return 0;
-        }
-        if (depth == 0) {
-            buf[i] = '\0';
-            return i;
-        }
-
     }
    // Timeout or overflow → reset
    SYS_TMR->CS = (1 << 3); // reset timeout flag
-   buf[0] = '\0';
-   return 0;
+   buf[i] = '\0';
+   return i;
 }

@@ -31,8 +31,8 @@ static char jsonString[CHAR_BUFFER] = {0};  // Uart buffer for receiving JSON st
 void core_main_0(uint32_t arg0, uint32_t arg1) {
   board_init();                             // detecteer bord en stel mmio_base pointers in
   gpio_init();                              // Initialize GPIO
-  mu_init();                                // Initialize UART
-  start_core1();
+  mu_init();                                // Initialize mini UART
+  start_core1();                            // Start double pulse generator on core1
   mu_puts("> **************Dual Pulse Generator**************\r\n");
   mu_puts("> Usage: Send JSON string, for e.g {\"pulseWidth1\": 70, \"interPulseDelay\": 30, \"pulseWidth2\": 50, \"pulseInterval\": 500}.\r\n");
   mu_puts("> Using GPIO: ");
@@ -42,12 +42,12 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts("> | pulseWidth1 | interPulseDelay | pulseWith2 | pulseInterval |\r\n");
   mu_puts(">      70       ______ 30 _________     50     ______ 500_______\r\n");
 
-  mu_flush_rx();                            // Clear RX FIFO before starting main loop 
   gpio_init_pin(21, GPIO_OUT);              // Set GPIO 21 voor hart beat indication
   irq_init_core0();                         // Initialize IRQs for core0
 
   while (1) {
     if (mu_read_json(jsonString, CHAR_BUFFER, (100000))) { // If a character is in the UART buffer, try to get the whole string, or timeout (at 115200 one byte is ~87usec).
+      mu_puts("> Received: ");
       mu_puts(jsonString);                  // Print the received JSON string
       mu_puts("\r\n");
       jsmn_parser p;                        // JSON parser
@@ -94,25 +94,25 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
           if (strcmp(key, "pulseWidth1") == 0) {
             Intervals[0] = strtoul(jsonString + t[i + 1].start, NULL, 10); // Convert the value to unsigned long and store it in the array
             INT_ARM_LOCAL->MBOX_SET04 = Intervals[0];
-            mu_puts("> pulseWidth1 set to: ");
+            mu_puts("> PulseWidth1 now: ");
             mu_put_uint(Intervals[0]);
             mu_puts("\r\n");
           } else if (strcmp(key, "interPulseDelay") == 0) {
             Intervals[1] = strtoul(jsonString + t[i + 1].start, NULL, 10);
             INT_ARM_LOCAL->MBOX_SET05 = Intervals[1];
-            mu_puts("> interPulseDelay set to: ");
+            mu_puts("> InterPulseDelay now: ");
             mu_put_uint(Intervals[1]);
             mu_puts("\r\n");
           } else if (strcmp(key, "pulseWidth2") == 0) {
             Intervals[2] = strtoul(jsonString + t[i + 1].start, NULL, 10);
             INT_ARM_LOCAL->MBOX_SET06 = Intervals[2];
-            mu_puts("> pulseWidth2 set to: ");
+            mu_puts("> PulseWidth2 now: ");
             mu_put_uint(Intervals[2]);
             mu_puts("\r\n");
           } else if (strcmp(key, "pulseInterval") == 0) {
             Intervals[3] = strtoul(jsonString + t[i + 1].start, NULL, 10);
             INT_ARM_LOCAL->MBOX_SET07 = Intervals[3];
-            mu_puts("> pulseInterval set to: ");
+            mu_puts("> PulseInterval now: ");
             mu_put_uint(Intervals[3]);
             mu_puts("\r\n");
           } else {

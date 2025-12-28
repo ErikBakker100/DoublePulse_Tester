@@ -1,9 +1,5 @@
 #include "include/multi_core.h"
 
-// gedeeld statusblok, in .bss of .data
-volatile uint8_t core_status[4] = {0}; 
-// core_status[n] == 1 → core is gestart
-
 // core_boot geeft pointer naar write bootadresregister van core 'core_id'
 volatile core_reg_t *core_boot(int core_id) {
     return (volatile core_reg_t *)((uintptr_t)(BASE_ADDR + (CORE_STRIDE * core_id)));

@@ -21,8 +21,6 @@ void irq_init_core0(void) {
     INT->DISABLE_IRQS_BASIC = 0xFFFFFFFF; // Disable all basic IRQs
     INT->DISABLE_IRQS[0] = 0xFFFFFFFF; // Disable all IRQs in bank 0
     INT->DISABLE_IRQS[1] = 0xFFFFFFFF; // Disable all IRQs in bank 1
-    // 2. Clear AUX pending interrupts
-    AUX->IRQ = 0xFFFFFFFF;
     // Mask all interrupts
     INT->ENABLE_IRQS_BASIC = 0;
     INT->ENABLE_IRQS[0] = 0;
@@ -80,19 +78,19 @@ void irq_init_core1(void) {
 }
 
 void irq_handler_core1(void) {
-    if(INT_ARM_LOCAL->IRQ_SOURCE1 && INT_SRC_MBOX0) {
+    if(INT_ARM_LOCAL->IRQ_SOURCE1 & INT_SRC_MBOX0) {
         mailbox0_core1(INT_ARM_LOCAL->MBOX_CLR04);
         INT_ARM_LOCAL->MBOX_CLR04 = 0xFFFFFFFF; // Wis de gelezen bits, en clear de IRQ daarmee
     }
-    if(INT_ARM_LOCAL->IRQ_SOURCE1 && INT_SRC_MBOX1) {
+    if(INT_ARM_LOCAL->IRQ_SOURCE1 & INT_SRC_MBOX1) {
         mailbox1_core1(INT_ARM_LOCAL->MBOX_CLR05);
         INT_ARM_LOCAL->MBOX_CLR05 = 0xFFFFFFFF; // Wis de gelezen bits, en clear de IRQ daarmee
     }
-    if(INT_ARM_LOCAL->IRQ_SOURCE1 && INT_SRC_MBOX2) {
+    if(INT_ARM_LOCAL->IRQ_SOURCE1 & INT_SRC_MBOX2) {
         mailbox2_core1(INT_ARM_LOCAL->MBOX_CLR06);
         INT_ARM_LOCAL->MBOX_CLR06 = 0xFFFFFFFF; // Wis de gelezen bits, en clear de IRQ daarmee
     }
-    if(INT_ARM_LOCAL->IRQ_SOURCE1 && INT_SRC_MBOX3) {
+    if(INT_ARM_LOCAL->IRQ_SOURCE1 & INT_SRC_MBOX3) {
         mailbox3_core1(INT_ARM_LOCAL->MBOX_CLR07);
         INT_ARM_LOCAL->MBOX_CLR07 = 0xFFFFFFFF; // Wis de gelezen bits, en clear de IRQ daarmee
     }
