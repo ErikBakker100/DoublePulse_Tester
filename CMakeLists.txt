@@ -1,64 +1,53 @@
 cmake_minimum_required(VERSION 3.17)
 
 # ----------------------
-# Gebruikersopties
+# User options
 # ----------------------
-set(ARCH "arm64" CACHE STRING "Target architecture: arm32 or arm64")
+include(${CMAKE_SOURCE_DIR}/CMakeFiles/utils.cmake)
+
+set(ARCH "arm64" CACHE STRING "Target architecture")
 set_property(CACHE ARCH PROPERTY STRINGS arm32 arm64)
+validate_choice(ARCH arm32 arm64)
 
-set(RPI_MODEL "Z2" CACHE STRING "Raspberry Pi model: Z1, Z2, 4B")
+set(RPI_MODEL "Z2" CACHE STRING "Raspberry Pi model")
 set_property(CACHE RPI_MODEL PROPERTY STRINGS Z1 Z2 4B)
+validate_choice(RPI_MODEL Z1 Z2 4B)
 
-set(DUALCORE "on" CACHE STRING "Dual core support: on or off")
+set(DUALCORE "on" CACHE STRING "Dual core support")
 set_property(CACHE DUALCORE PROPERTY STRINGS on off)
+validate_choice(DUALCORE on off)
 
-set(SDCARD_DIR ${CMAKE_SOURCE_DIR}/sdcard)
+print_choice(ARCH
+    arm32 "arm32 build"
+    arm64 "arm64 build"
+)
 
-if(ARCH STREQUAL "arm64")
-    message(STATUS "arm64 build enabled")
-else()
-    message(STATUS "arm32 build enabled")
-endif()
+print_choice(RPI_MODEL
+    Z1 "Building for Raspberry Pi Zero 1"
+    Z2 "Building for Raspberry Pi Zero 2(W)"
+    4B "Building for Raspberry Pi 4B"
+)
 
-if(RPI_MODEL STREQUAL "Z2")
-    message(STATUS "Building for Raspberry Pi Zero 2(W)")
-elseif(RPI_MODEL STREQUAL "Z1")
-    message(STATUS "Building for Raspberry Pi Zero 1")
-elseif(RPI_MODEL STREQUAL "4B")
-    message(STATUS "Building for Raspberry Pi 4B")
-endif()
+print_choice(DUALCORE
+    on  "Dual-core build"
+    off "Single-core build"
+)
 
-if(DUALCORE STREQUAL "on")
-    message(STATUS "Dual-core build enabled")
-else()
-    message(STATUS "Single-core build")
-endif()
 
-if(NOT (ARCH STREQUAL "arm32" OR ARCH STREQUAL "arm64"))
-    message(FATAL_ERROR "Ongeldige waarde voor ARCH: ${ARCH}. Kies uit: arm32, arm64")
-endif()
-
-if(NOT (RPI_MODEL STREQUAL "Z1" OR RPI_MODEL STREQUAL "Z2" OR RPI_MODEL STREQUAL "4B"))
-    message(FATAL_ERROR "Ongeldige waarde voor RPI_MODEL: ${RPI_MODEL}. Kies uit: Z1, Z2, 4B")
-endif()
-
-if(NOT (DUALCORE STREQUAL "on" OR DUALCORE STREQUAL "off"))
-    message(FATAL_ERROR "Ongeldige waarde voor DUALCORE: ${DUALCORE}. Kies uit: on, off")
+# ----------------------
+# Validating user choices
+# ----------------------
+if(RPI_MODEL STREQUAL "Z1")
+    if(ARCH STREQUAL "arm64")
+        message(FATAL_ERROR "Raspberry Pi Zero 1 does not support arm64")
+    endif()
+    if(DUALCORE STREQUAL "on")
+        message(FATAL_ERROR "Raspberry Pi Zero 1 does not support dual-core")
+    endif()
 endif()
 
 # ----------------------
-# Combinaties valideren
-# ----------------------
-if(RPI_MODEL STREQUAL "Z1" AND NOT ARCH STREQUAL "arm32")
-    message(FATAL_ERROR "Raspberry Pi Zero 1 (Z1) ondersteunt alleen ARCH=arm32")
-endif()
-
-if(RPI_MODEL STREQUAL "Z1" AND NOT DUALCORE STREQUAL "off")
-    message(FATAL_ERROR "Raspberry Pi Zero 1 (Z1) is een single core device, alleen DUALCORE=off is mogelijk.")
-endif()
-
-# ----------------------
-# Toolchain automatisch kiezen, en Startup & linker script
+# Auto select toolchains and Startup files for selected ARCH
 # ----------------------
 if(ARCH STREQUAL "arm32")
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/CMakeFiles/toolchain-arm-eabi.cmake"
@@ -71,6 +60,11 @@ elseif(ARCH STREQUAL "arm64")
 else()
     message(FATAL_ERROR "ARCH moet arm32 of arm64 zijn")
 endif()
+
+# ----------------------
+# Set output directory for SD-Card
+# ----------------------
+set(SDCARD_DIR ${CMAKE_SOURCE_DIR}/sdcard)
 
 # ----------------------
 # Project setup
