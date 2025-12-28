@@ -21,20 +21,26 @@ bss_clear_done:
     b       core_entry_0
 
 // -----------------------------------------------------
-//  Entry Core 0-1
+//  Entry Core 0-1 if defined DUALCORE=on
 // -----------------------------------------------------
 core_entry_x 0
+#ifdef DUALCORE
 core_entry_x 1
+#endif
 // -----------------------------------------------------
-//  Entry Irq's Core 0-1
+//  Entry Irq's Core 0-1 if defined DUALCORE=on
 // -----------------------------------------------------
 irq_entry_x	0
+#ifdef DUALCORE
 irq_entry_x	1
+#endif
 // -----------------------------------------------------
-//  Vector tables Core 0-1
+//  Vector tables Core 0-1 if defined DUALCORE=on
 // -----------------------------------------------------
 vector_core_x 0
+#ifdef DUALCORE
 vector_core_x 1
+#endif
 // -----------------------------------------------------
 hang:
     b hang

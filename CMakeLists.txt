@@ -1,6 +1,21 @@
 cmake_minimum_required(VERSION 3.17)
 
 # ----------------------
+# Auto select toolchains and Startup files for selected ARCH
+# ----------------------
+if(ARCH STREQUAL "arm32")
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/CMakeFiles/toolchain-arm-eabi.cmake"
+        CACHE FILEPATH "Toolchain file" FORCE)
+    set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start32.s)
+elseif(ARCH STREQUAL "arm64")
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/CMakeFiles/toolchain-aarch64.cmake"
+        CACHE FILEPATH "Toolchain file" FORCE)
+    set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start64.s)
+else()
+    message(FATAL_ERROR "ARCH moet arm32 of arm64 zijn")
+endif()
+
+# ----------------------
 # User options
 # ----------------------
 include(${CMAKE_SOURCE_DIR}/CMakeFiles/utils.cmake)
@@ -33,7 +48,6 @@ print_choice(DUALCORE
     off "Single-core build"
 )
 
-
 # ----------------------
 # Validating user choices
 # ----------------------
@@ -47,18 +61,26 @@ if(RPI_MODEL STREQUAL "Z1")
 endif()
 
 # ----------------------
-# Auto select toolchains and Startup files for selected ARCH
+# Linker script preprocessor defines
 # ----------------------
-if(ARCH STREQUAL "arm32")
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/CMakeFiles/toolchain-arm-eabi.cmake"
-        CACHE FILEPATH "Toolchain file" FORCE)
-    set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start32.s)
-elseif(ARCH STREQUAL "arm64")
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/CMakeFiles/toolchain-aarch64.cmake"
-        CACHE FILEPATH "Toolchain file" FORCE)
-    set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start64.s)
+set(LINKER_DEFINES "")
+
+if(DUALCORE STREQUAL "on")
+    list(APPEND LINKER_DEFINES -DDUALCORE)
+endif()
+
+if(ARCH STREQUAL "arm64")
+    list(APPEND LINKER_DEFINES -DARCH_ARM64)
 else()
-    message(FATAL_ERROR "ARCH moet arm32 of arm64 zijn")
+    list(APPEND LINKER_DEFINES -DARCH_ARM32)
+endif()
+
+if(RPI_MODEL STREQUAL "Z1")
+    list(APPEND LINKER_DEFINES -DRPI_Z1)
+elseif(RPI_MODEL STREQUAL "Z2")
+    list(APPEND LINKER_DEFINES -DRPI_Z2)
+elseif(RPI_MODEL STREQUAL "4B")
+    list(APPEND LINKER_DEFINES -DRPI_4B)
 endif()
 
 # ----------------------
@@ -88,6 +110,12 @@ set(LINKER_SCRIPT ${CMAKE_BINARY_DIR}/bin/linker.ld)
 # Executable
 # ----------------------
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+add_custom_target(linker_script ALL
+    DEPENDS ${LINKER_SCRIPT}
+)
+
+add_dependencies(${PROJECT_NAME} linker_script)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/src
@@ -163,10 +191,31 @@ else()
     set(LINKER_LOAD_ADDR 0x8000)
     endif()
 
+# ----------------------
+# Linker script generation
+# ----------------------
+
+set(LINKER_PP     ${CMAKE_BINARY_DIR}/bin/linker.ld.pp)
+set(LINKER_SCRIPT ${CMAKE_BINARY_DIR}/bin/linker.ld)
+
+# Stap 1: CMake-variabelen vervangen (@VAR@)
 configure_file(
-    ${CMAKE_SOURCE_DIR}/src/linker.ld.in
-    ${CMAKE_BINARY_DIR}/bin/linker.ld
+    ${CMAKE_SOURCE_DIR}/src/linker.ld.S
+    ${LINKER_PP}
     @ONLY
+)
+
+add_custom_command(
+    OUTPUT ${LINKER_SCRIPT}
+    COMMAND ${CMAKE_C_COMPILER}
+            -E
+            -P
+            ${LINKER_DEFINES}
+            ${LINKER_PP}
+            -o ${LINKER_SCRIPT}
+    DEPENDS ${LINKER_PP}
+    COMMENT "Preprocessing linker script"
+    VERBATIM
 )
 
 # Decide which image files the Pi expects, and set Model-specific options
