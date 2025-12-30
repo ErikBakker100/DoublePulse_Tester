@@ -30,8 +30,8 @@ void irq_init_core0(void) {
     INT->ENABLE_IRQS[0] = (1 << 29); // Enable Mini UART (bit 61 overall, bit 29 in ENABLE_IRQS[1])
     INT->ENABLE_IRQS[0] = (1 << 1); // Enable SYSTEM Timer C1 interrupt (bit 1 overall, bit 1 in ENABLE_IRQS[0])
     // ensure writes reach device before we enable interrupts
-    __asm__ volatile ("dsb sy":::"memory");
-    __asm__ volatile ("isb":::"memory");
+    cpu_dsb();
+    cpu_isb();
     // Enable interrupts
     timer_hart_beat();                     // start timer IRQ for testing
     irq_enable();
@@ -71,8 +71,8 @@ void irq_init_core1(void) {
     // Enable mailbox interrupts for this core
     INT_ARM_LOCAL->MAILBOX_CNTRL1 = (MBOX0_IRQ | MBOX1_IRQ | MBOX2_IRQ | MBOX3_IRQ); // IRQ's voor alle mailboxen van core1 enabelen.
     // ensure writes reach device before we enable interrupts
-    __asm__ volatile ("dsb sy":::"memory");
-    __asm__ volatile ("isb":::"memory");
+    cpu_dsb();
+    cpu_isb();
     // Enable interrupts
     irq_enable();
 }

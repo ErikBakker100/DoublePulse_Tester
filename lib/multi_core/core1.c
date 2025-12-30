@@ -20,12 +20,8 @@ unsigned long delay4 = DEFAULT_PULSE_INTERVAL; // holds Pulse Interval delay
 
 void start_core1(void) {
     *core_boot(1) = (core_reg_t)(uintptr_t)&core_entry_1;
-#if defined(__aarch64__) || defined(__AARCH64__)
-    asm volatile ("dsb ishst");
-#else
-    asm volatile ("dsb");
-#endif
-    asm volatile ("sev"); // stuur event om core wakker te maken
+    cpu_dsb();
+    cpu_sev();
 }
 
 // Entry point for core1

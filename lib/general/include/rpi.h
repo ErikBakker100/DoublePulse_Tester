@@ -23,3 +23,8 @@ void irq_enable(void);
 void fiq_disable(void);
 void fiq_enable(void);
 void clearBss(void);
+void cpu_dsb(void);
+void cpu_isb(void);
+void cpu_sev(void);
+void cpu_wfe(void);
+

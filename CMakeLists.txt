@@ -1,19 +1,7 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.20)
 
-# ----------------------
-# Auto select toolchains and Startup files for selected ARCH
-# ----------------------
-if(ARCH STREQUAL "arm32")
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/CMakeFiles/toolchain-arm-eabi.cmake"
-        CACHE FILEPATH "Toolchain file" FORCE)
-    set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start32.s)
-elseif(ARCH STREQUAL "arm64")
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/CMakeFiles/toolchain-aarch64.cmake"
-        CACHE FILEPATH "Toolchain file" FORCE)
-    set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start64.s)
-else()
-    message(FATAL_ERROR "ARCH moet arm32 of arm64 zijn")
-endif()
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR arm)
 
 # ----------------------
 # User options
@@ -25,8 +13,8 @@ set_property(CACHE ARCH PROPERTY STRINGS arm32 arm64)
 validate_choice(ARCH arm32 arm64)
 
 set(RPI_MODEL "Z2" CACHE STRING "Raspberry Pi model")
-set_property(CACHE RPI_MODEL PROPERTY STRINGS Z1 Z2 4B)
-validate_choice(RPI_MODEL Z1 Z2 4B)
+set_property(CACHE RPI_MODEL PROPERTY STRINGS Z1 Z2 3A 3B 3B+ 4B 5)
+validate_choice(RPI_MODEL Z1 Z2 3A 3B 3B+ 4B 5)
 
 set(DUALCORE "on" CACHE STRING "Dual core support")
 set_property(CACHE DUALCORE PROPERTY STRINGS on off)
@@ -40,7 +28,11 @@ print_choice(ARCH
 print_choice(RPI_MODEL
     Z1 "Building for Raspberry Pi Zero 1"
     Z2 "Building for Raspberry Pi Zero 2(W)"
+    3A "Building for Raspberry Pi 3A"
+    3B "Building for Raspberry Pi 3B"
+    3B+ "Building for Raspberry Pi 3B+"
     4B "Building for Raspberry Pi 4B"
+    5 "Building for Raspberry Pi 5"
 )
 
 print_choice(DUALCORE
@@ -61,7 +53,86 @@ if(RPI_MODEL STREQUAL "Z1")
 endif()
 
 # ----------------------
-# Linker script preprocessor defines
+# Raspberry Pi CPU map
+# ----------------------
+
+if(RPI_MODEL STREQUAL "Z1")
+    # Raspberry Pi Zero / Zero W
+    set(RPI_DEFINE      RPIZ1)
+    set(RPI_CPU         arm1176jzf-s)
+    set(RPI_ARCH        armv6)
+    set(RPI_ARM_BITS    arm32)
+
+elseif(RPI_MODEL STREQUAL "Z2")
+    # Raspberry Pi Zero 2 W
+    set(RPI_DEFINE      RPIZ2)
+    set(RPI_CPU         cortex-a53)
+    set(RPI_ARCH        armv8-a)
+    set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+
+elseif(RPI_MODEL STREQUAL "3A")
+    # Raspberry Pi 3A
+    set(RPI_DEFINE      RPI3A)
+    set(RPI_CPU         cortex-a53)
+    set(RPI_ARCH        armv8-a)
+    set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+
+elseif(RPI_MODEL STREQUAL "3B")
+    # Raspberry Pi 3B
+    set(RPI_DEFINE      RPI3B)
+    set(RPI_CPU         cortex-a53)
+    set(RPI_ARCH        armv8-a)
+    set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+
+elseif(RPI_MODEL STREQUAL "3B+")
+    # Raspberry Pi 3B+
+    set(RPI_DEFINE      RPI3B+)
+    set(RPI_CPU         cortex-a53)
+    set(RPI_ARCH        armv8-a)
+    set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+
+elseif(RPI_MODEL STREQUAL "4B")
+    # Raspberry Pi 4B
+    set(RPI_DEFINE      RPI4B)
+    set(RPI_CPU         cortex-a72)
+    set(RPI_ARCH        armv8-a)
+    set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+
+elseif(RPI_MODEL STREQUAL "5")
+    # Raspberry Pi 5
+    set(RPI_DEFINE      RPI5)
+    set(RPI_CPU         cortex-a76)
+    set(RPI_ARCH        armv8.2-a)
+    set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+
+else()
+    message(FATAL_ERROR "Onbekend RPI_MODEL: ${RPI_MODEL}")
+endif()
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
+        "Build type (Debug, Release)" FORCE)
+endif()
+
+# ----------------------
+# Auto select toolchains and Startup files for selected ARCH
+# ----------------------
+if(ARCH STREQUAL "arm32")
+    set(CMAKE_C_COMPILER arm-none-eabi-gcc)
+    set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
+    set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start32.s)
+elseif(ARCH STREQUAL "arm64")
+    set(CMAKE_C_COMPILER aarch64-none-elf-gcc)
+    set(CMAKE_ASM_COMPILER aarch64-none-elf-gcc)
+    set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start64.s)
+else()
+    message(FATAL_ERROR "-DARCH= has to be arm32 or arm64")
+endif()
+
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
+# ----------------------
+# Linker script defines
 # ----------------------
 set(LINKER_DEFINES "")
 
@@ -69,31 +140,10 @@ if(DUALCORE STREQUAL "on")
     list(APPEND LINKER_DEFINES -DDUALCORE)
 endif()
 
-if(ARCH STREQUAL "arm64")
-    list(APPEND LINKER_DEFINES -DARCH_ARM64)
-else()
-    list(APPEND LINKER_DEFINES -DARCH_ARM32)
-endif()
-
-if(RPI_MODEL STREQUAL "Z1")
-    list(APPEND LINKER_DEFINES -DRPI_Z1)
-elseif(RPI_MODEL STREQUAL "Z2")
-    list(APPEND LINKER_DEFINES -DRPI_Z2)
-elseif(RPI_MODEL STREQUAL "4B")
-    list(APPEND LINKER_DEFINES -DRPI_4B)
-endif()
-
 # ----------------------
 # Set output directory for SD-Card
 # ----------------------
 set(SDCARD_DIR ${CMAKE_SOURCE_DIR}/sdcard)
-
-# ----------------------
-# Project setup
-# ----------------------
-project(doublepulse
-    VERSION 1.0
-    LANGUAGES C ASM)
 
 # ----------------------
 # Bronbestanden
@@ -104,97 +154,35 @@ file(GLOB_RECURSE SOURCES
     ${STARTUP_FILE}
 )
 
-set(LINKER_SCRIPT ${CMAKE_BINARY_DIR}/bin/linker.ld)
+# ----------------------
+# Project setup
+# ----------------------
+project(doublepulse
+    VERSION 1.0
+    LANGUAGES C ASM)
 
 # ----------------------
-# Executable
+# Explicit Debug / Release flags
 # ----------------------
-add_executable(${PROJECT_NAME} ${SOURCES})
+set(CMAKE_C_FLAGS_DEBUG "-Og -g3" CACHE STRING "" FORCE)
+set(CMAKE_ASM_FLAGS_DEBUG "-g3" CACHE STRING "" FORCE)
 
-add_custom_target(linker_script ALL
-    DEPENDS ${LINKER_SCRIPT}
-)
-
-add_dependencies(${PROJECT_NAME} linker_script)
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-)
+set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "" FORCE)
+set(CMAKE_ASM_FLAGS_RELEASE "" CACHE STRING "" FORCE)
 
 # ----------------------
-# Compiler instellingen
+# Kernel image & linker load address
 # ----------------------
-# Kies variabele op basis van RPI_MODEL
-if(RPI_MODEL STREQUAL "Z1")
-    set(RPI_DEFINE raspberry_zero_1w)
-    set(CORE_FREQ 250)
-elseif(RPI_MODEL STREQUAL "Z2")
-    set(RPI_DEFINE raspberry_zero_2w)
-    set(CORE_FREQ 500)
-elseif(RPI_MODEL STREQUAL "4B")
-    set(RPI_DEFINE raspberry_pi_4b)
-    set(CORE_FREQ 500)
-else()
-    message(FATAL_ERROR "Onbekend RPI_MODEL: ${RPI_MODEL}")
-endif()
-
-# Definities doorgeven aan de compiler (alleen voor C, niet voor ASM)
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-    $<$<COMPILE_LANGUAGE:C>:${RPI_DEFINE}>
-    $<$<COMPILE_LANGUAGE:C>:CORE_FREQ=${CORE_FREQ}>
-)
-
-# ----------------------
-# Model-specifieke compileropties
-# ----------------------
-set(ARCH_FLAGS "")
-
-if(RPI_MODEL STREQUAL "Z1" AND ARCH STREQUAL "arm32")
-	set(ARCH_FLAGS -mcpu=arm1176jzf-s -marm) #-marm dwingt de compiler om ARM 32-bit (A32) instructies te genereren.
-elseif(RPI_MODEL STREQUAL "Z2" AND ARCH STREQUAL "arm32")
-    set(ARCH_FLAGS -mcpu=cortex-a53 -marm)
-elseif(RPI_MODEL STREQUAL "Z2" AND ARCH STREQUAL "arm64")
-    set(ARCH_FLAGS -march=armv8-a)
-elseif(RPI_MODEL STREQUAL "4B" AND ARCH STREQUAL "arm32")
-    set(ARCH_FLAGS -mcpu=cortex-a72 -marm)
-elseif(RPI_MODEL STREQUAL "4B" AND ARCH STREQUAL "arm64")
-    set(ARCH_FLAGS -march=armv8-a)	
-endif()
-
-target_compile_options(${PROJECT_NAME} PRIVATE
-    -Wall
-    -fno-builtin
-	${ARCH_FLAGS}
-)
-
-target_link_options(${PROJECT_NAME} PRIVATE
-    "-nostartfiles"
-    "-nostdlib"
-    "-T${LINKER_SCRIPT}"
-    "-Wl,-Map=${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.map"
-)
-
-# ----------------------
-# Post-build acties
-# ----------------------
-
-# 64bit versions require kernel8.img, whereby 32bit versions uses kernel.img
 if(ARCH STREQUAL "arm64") 
     set(IMAGEFILE kernel8.img)
-    set(ARM_64BIT 1)
-    set(KERNEL ${IMAGEFILE})
     set(LINKER_LOAD_ADDR 0x80000)
 else() 
     set(IMAGEFILE kernel.img)
-    set(ARM_64BIT 0)
-    set(KERNEL ${IMAGEFILE})
     set(LINKER_LOAD_ADDR 0x8000)
-    endif()
-
+endif()
 # ----------------------
 # Linker script generation
 # ----------------------
-
 set(LINKER_PP     ${CMAKE_BINARY_DIR}/bin/linker.ld.pp)
 set(LINKER_SCRIPT ${CMAKE_BINARY_DIR}/bin/linker.ld)
 
@@ -205,18 +193,93 @@ configure_file(
     @ONLY
 )
 
+# ----------------------
+# Executable
+# ----------------------
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+# Forceer dat ASM geen C compile flags meekrijgt bij linking
+set_source_files_properties(${STARTUP_FILE} PROPERTIES
+     COMPILE_FLAGS "-x assembler-with-cpp"
+)
+
 add_custom_command(
     OUTPUT ${LINKER_SCRIPT}
-    COMMAND ${CMAKE_C_COMPILER}
-            -E
-            -P
+    COMMAND ${CMAKE_C_COMPILER} -E -P -x c
             ${LINKER_DEFINES}
             ${LINKER_PP}
             -o ${LINKER_SCRIPT}
     DEPENDS ${LINKER_PP}
     COMMENT "Preprocessing linker script"
-    VERBATIM
 )
+
+add_custom_target(generate_linker_script DEPENDS ${LINKER_SCRIPT})
+add_dependencies(${PROJECT_NAME} generate_linker_script)
+
+set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY
+    LINK_DEPENDS ${LINKER_SCRIPT}
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+# ----------------------
+# Compiler settings
+# ----------------------
+
+# Passing definitions onto the compiler (for C and ASM)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    $<$<COMPILE_LANGUAGE:C>:${RPI_DEFINE}>
+)
+
+if(DUALCORE STREQUAL "on")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE 
+    DUALCORE)
+endif()
+
+if(ARCH STREQUAL "arm64")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+    $<$<COMPILE_LANGUAGE:ASM>:ARCH_ARM64>)
+else()
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+    $<$<COMPILE_LANGUAGE:ASM>:ARCH_ARM32>)
+endif()
+
+# Compiler flags
+set(ARCH_FLAGS "")
+
+if(RPI_ARM_BITS STREQUAL "arm32")
+    set(ARCH_FLAGS
+        -mcpu=${RPI_CPU}
+        -marm
+    )
+elseif(RPI_ARM_BITS STREQUAL "arm64")
+    set(ARCH_FLAGS
+        -march=${RPI_ARCH}
+    )
+endif()
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<COMPILE_LANGUAGE:C>: -Wall -fno-builtin>
+	${ARCH_FLAGS}
+)
+
+# ----------------------
+# Linker flags
+# ----------------------
+
+target_link_options(${PROJECT_NAME} PRIVATE
+    -nostartfiles
+    -nostdlib
+    -ffreestanding
+    -T${LINKER_SCRIPT}
+    -Wl,-Map=${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.map
+)
+
+# ----------------------
+# Post-build acties
+# ----------------------
 
 # Decide which image files the Pi expects, and set Model-specific options
 if(RPI_MODEL STREQUAL "Z1")
