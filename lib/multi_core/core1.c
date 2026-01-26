@@ -1,4 +1,10 @@
 #include "include/core1.h"
+#include "../multi_core/include/multi_core.h"
+#include "../general/include/stdlib.h"
+#include "../general/include/config.h"
+#include "../boards/soc/include/gpio.h"
+#include "../boards/soc/include/irq.h"
+#include "../boards/soc/cpu/include/cpu.h"
 
 unsigned long delay1 = DEFAULT_PULSE_WIDTH1; // holds Pulse Width1 delay
 unsigned long delay2 = DEFAULT_INTER_PULSE_DELAY; // holds Inter Pulse width delay
@@ -15,9 +21,6 @@ unsigned long delay4 = DEFAULT_PULSE_INTERVAL; // holds Pulse Interval delay
 // voor alle inner-shareable caches en buffers voordat de instructie verder gaat.
 */
 
-// Delay loop
-#define DELAY(count) do { volatile uint32_t _i = (count); while (_i--) asm volatile("nop"); } while(0)
-
 void start_core1(void) {
     *core_boot(1) = (core_reg_t)(uintptr_t)&core_entry_1;
     cpu_dsb();
@@ -26,22 +29,18 @@ void start_core1(void) {
 
 // Entry point for core1
 void core_main_1() {
-    uint32_t bank = OUTPUT_PIN<32?0:1;
-    volatile uint32_t *gpio_on = &GPIO->SET[bank];
-    volatile uint32_t *gpio_off = &GPIO->CLR[bank];
-    uint32_t mask = OUTPUT_PIN<32?(1u << OUTPUT_PIN):(1u << (OUTPUT_PIN - 32));
-    gpio_init_pin(OUTPUT_PIN, GPIO_OUT);
-    gpio_clear(OUTPUT_PIN); // Initial state low (inactive)    
-    irq_init_core1();
+    gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN);
+    gpio->clear(OUTPUT_PIN); // Initial state low (inactive)
+    irq->init_core1();
 
     while (1) {
-        *gpio_on = mask;
+        gpio->set(OUTPUT_PIN);
         DELAY(delay1); // PulseWidth1
-        *gpio_off = mask;
+        gpio->clear(OUTPUT_PIN);
         DELAY(delay2); // interPulseDelay
-        *gpio_on = mask;
+        gpio->set(OUTPUT_PIN);
         DELAY(delay3); // PulseWith2
-        *gpio_off = mask;
+        gpio->clear(OUTPUT_PIN);
         DELAY(delay4); // Pulseinterval
    }
 /*  Alternatief voor instabiele DELAY() functie, gebruik PWM in ns modus

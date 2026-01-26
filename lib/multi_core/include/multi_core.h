@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "..\..\general\include\BCM2835.h"
+#include "../../boards/soc/BCM2835/include/BCM2835.h"
 
 // BASE_ADDR depends on architecture, set accordingly. Used for core_boot address table.
 // Core	32-bit RDCLR (AArch32)	64-bit RDCLR (AArch64)	Verschil

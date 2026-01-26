@@ -1,4 +1,3 @@
-.section .text._start, "ax"
 .globl _start
 .extern clearBss
 #include "macros.S"
@@ -6,6 +5,7 @@
 // -----------------------------------------------------
 //  Entry point voor Core0
 // -----------------------------------------------------
+.section .text._start, "ax"
 _start:
     // Clear the BSS segment (assumes __bss_start and __bss_end word-aligned).
     bl  clearBss

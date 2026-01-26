@@ -1,6 +1,8 @@
 #ifndef MACROS_S
 #define MACROS_S
 
+#include "../lib/general/include/sysregs.h"
+
 #if defined(ARCH_ARM32)
 .macro	    core_entry_x	core
 .globl core_entry_\core
@@ -91,7 +93,6 @@ vector_table_core\core:
 .globl core_entry_\core
 .extern core_main_\core
 .extern __stack_el1_top_core\core
-#include "../lib/general/include/sysregs.h"
 
 core_entry_\core:
     // Determine current exception level
@@ -145,7 +146,6 @@ el1_entry_core\core:
 // IRQ entry macro
 // -----------------------------------------------------
 .macro	    irq_entry_x	core
-.section .text
 .globl irq_entry_\core
 .extern irq_handler_core\core
 irq_entry_\core:
@@ -156,7 +156,6 @@ irq_entry_\core:
 
 // Macro to save registers and call the C IRQ handler
 .macro	kernel_entry
-.section .text
 .align 4
     // Reserve enough bytes (31 regs * 8 = 248 bytes; + 8 padding => 256 = 16*16)
     sub     sp, sp, #(16*16)          // ruimte voor x0–x30, aligned op 16 bytes
@@ -180,7 +179,6 @@ irq_entry_\core:
 
 // Macro to restore registers and return from irq
 .macro	kernel_exit
-.section .text
 .align 4
     ldp     x0,  x1,  [sp, #16*0]
     ldp     x2,  x3,  [sp, #16*1]
@@ -240,6 +238,7 @@ vector_table_\core:
 // -----------------------------------------------------
 // Hang routine
 // -----------------------------------------------------
+.section .text
 hang:
     wfe                             // Wait For Event: zet de core in een laag-energie wacht-toestand totdat een interrupt of event optreedt.
     b hang

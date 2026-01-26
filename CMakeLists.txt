@@ -62,6 +62,10 @@ if(RPI_MODEL STREQUAL "Z1")
     set(RPI_CPU         arm1176jzf-s)
     set(RPI_ARCH        armv6)
     set(RPI_ARM_BITS    arm32)
+    set(CORE_FREQ       250)
+    set(ARM_FREQ        250)
+    set(OUTPUT          18)
+    set(IMAGEFILE kernel.img)
 
 elseif(RPI_MODEL STREQUAL "Z2")
     # Raspberry Pi Zero 2 W
@@ -69,6 +73,10 @@ elseif(RPI_MODEL STREQUAL "Z2")
     set(RPI_CPU         cortex-a53)
     set(RPI_ARCH        armv8-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(CORE_FREQ       500)
+    set(ARM_FREQ        250)
+    set(OUTPUT          18)
+    set(IMAGEFILE kernel8.img)
 
 elseif(RPI_MODEL STREQUAL "3A")
     # Raspberry Pi 3A
@@ -76,6 +84,10 @@ elseif(RPI_MODEL STREQUAL "3A")
     set(RPI_CPU         cortex-a53)
     set(RPI_ARCH        armv8-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(CORE_FREQ       500)
+    set(ARM_FREQ        250)
+    set(OUTPUT          18)
+    set(IMAGEFILE kernel8.img)
 
 elseif(RPI_MODEL STREQUAL "3B")
     # Raspberry Pi 3B
@@ -83,13 +95,21 @@ elseif(RPI_MODEL STREQUAL "3B")
     set(RPI_CPU         cortex-a53)
     set(RPI_ARCH        armv8-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(CORE_FREQ       500)
+    set(ARM_FREQ        250)
+    set(OUTPUT          18)
+    set(IMAGEFILE kernel8.img)
 
 elseif(RPI_MODEL STREQUAL "3B+")
     # Raspberry Pi 3B+
-    set(RPI_DEFINE      RPI3B+)
+    set(RPI_DEFINE      RPI3B_PLUS)
     set(RPI_CPU         cortex-a53)
     set(RPI_ARCH        armv8-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(CORE_FREQ       500)
+    set(ARM_FREQ        250)
+    set(OUTPUT          18)
+    set(IMAGEFILE kernel8.img)
 
 elseif(RPI_MODEL STREQUAL "4B")
     # Raspberry Pi 4B
@@ -97,6 +117,10 @@ elseif(RPI_MODEL STREQUAL "4B")
     set(RPI_CPU         cortex-a72)
     set(RPI_ARCH        armv8-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(CORE_FREQ       500)
+    set(ARM_FREQ        250)
+    set(OUTPUT          18)
+    set(IMAGEFILE kernel8.img)
 
 elseif(RPI_MODEL STREQUAL "5")
     # Raspberry Pi 5
@@ -104,8 +128,12 @@ elseif(RPI_MODEL STREQUAL "5")
     set(RPI_CPU         cortex-a76)
     set(RPI_ARCH        armv8.2-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(CORE_FREQ       500)
+    set(ARM_FREQ        250)
+    set(OUTPUT          18)
+    set(IMAGEFILE kernel8.img)
 
-else()
+    else()
     message(FATAL_ERROR "Onbekend RPI_MODEL: ${RPI_MODEL}")
 endif()
 
@@ -176,9 +204,21 @@ set(CMAKE_ASM_FLAGS_RELEASE "" CACHE STRING "" FORCE)
 if(ARCH STREQUAL "arm64") 
     set(IMAGEFILE kernel8.img)
     set(LINKER_LOAD_ADDR 0x80000)
-else() 
-    set(IMAGEFILE kernel.img)
+    set(ARM_64BIT 1)
+else() # 32-bit
     set(LINKER_LOAD_ADDR 0x8000)
+    set(ARM_64BIT 0)
+    if(RPI_MODEL MATCHES "^(3A|3B|3B\\+)$")
+        set(KERNEL kernel4.img)
+    elseif(RPI_MODEL MATCHES "^(Z|Z1)$")
+        set(KERNEL kernel.img)
+    elseif(RPI_MODEL STREQUAL "Z2")
+        set(KERNEL kernel.img)   # Zero 2 gebruikt oude naam
+    elseif(RPI_MODEL MATCHES "^(4B)$")
+        set(KERNEL kernel7l.img)
+    else()
+        message(FATAL_ERROR "Unknown RPI model for 32-bit kernel")
+    endif()
 endif()
 # ----------------------
 # Linker script generation
@@ -230,7 +270,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 # Passing definitions onto the compiler (for C and ASM)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    $<$<COMPILE_LANGUAGE:C>:${RPI_DEFINE}>
+    $<$<COMPILE_LANGUAGE:C>:RPI_DEFINE="${RPI_DEFINE}">
+    $<$<COMPILE_LANGUAGE:C>:CORE_FREQ=${CORE_FREQ}>
+    $<$<COMPILE_LANGUAGE:C>:ARM_FREQ=${ARM_FREQ}>
+    $<$<COMPILE_LANGUAGE:C>:OUTPUT=${OUTPUT}>
 )
 
 if(DUALCORE STREQUAL "on")
@@ -308,6 +351,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_OBJDUMP} -S $<TARGET_FILE:${PROJECT_NAME}> > ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.lst
     )
+    set(JTAG_ENABLE "gpio=22-27=a4")
+else()
+    set(JTAG_ENABLE "")
 endif()
 
 # Zorg dat de kernel altijd gebouwd wordt als je 'make' doet

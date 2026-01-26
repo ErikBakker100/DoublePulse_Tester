@@ -1,36 +1,15 @@
 #pragma once
-#if defined (RPIZ1)
-    #pragma message "using settings for raspberry_zero_1w"
-    #define OUTPUT_PIN ((uint8_t)18) // GPIO 18
-    #ifndef CORE_FREQ
-        #define CORE_FREQ 250
-    #endif
-#elif defined (RPIZ2)
-    #pragma message "using settings for raspberry_zero_2w"
-    #define OUTPUT_PIN ((uint8_t)18) // GPIO 18
-    #ifndef CORE_FREQ
-        #define CORE_FREQ 500
-    #endif
-#elif defined (RPI4B)
-    #pragma message "using settings for raspberry_pi_4b"
-    #define OUTPUT_PIN ((uint8_t)18) // GPIO 18
-    #ifndef CORE_FREQ
-        #define CORE_FREQ 500
-    #endif
-#endif
+#include <stdint.h>
 
-#ifndef CORE_FREQ
-    #define CORE_FREQ 250
-#endif
+#define OUTPUT_PIN ((uint8_t)OUTPUT)        // GPIO pin used for output, set in CMakeLists.txt
 
-#ifndef BAUDRATE
-    #define BAUDRATE 115200
-#endif
+#define BAUDRATE 115200
 
-#define CHAR_BUFFER 100 // Max size of the JSON string
-#define RX_BUF_SIZE 256 // Size of the RX buffer for UART reception
+#define DEFAULT_PULSE_WIDTH1 70             // in microseconds
+#define DEFAULT_INTER_PULSE_DELAY 30        // in microseconds
+#define DEFAULT_PULSE_WIDTH2 50             // in microseconds
+#define DEFAULT_PULSE_INTERVAL 500          // in microseconds
+extern uint32_t Intervals[4]; // Array to hold the intervals
 
-#define DEFAULT_PULSE_WIDTH1 70      // in microseconds
-#define DEFAULT_INTER_PULSE_DELAY 30  // in microseconds
-#define DEFAULT_PULSE_WIDTH2 50      // in microseconds
-#define DEFAULT_PULSE_INTERVAL 500    // in microseconds
+#define CPUID_REG (*(volatile uint32_t *)0xE000ED00)
+
