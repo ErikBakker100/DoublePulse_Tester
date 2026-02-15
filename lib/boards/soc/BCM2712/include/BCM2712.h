@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "../../include/mmio.h"
+#include "../../include/soc.h"
 
 /*
 Block Bus       Type    Atomic  Access Address
@@ -360,4 +360,4 @@ typedef struct {
 extern volatile bcm2712_int_gic_600_gicr_regs_t *INT_GICR_2712[4];
 
 // Initializes the BCM27612 address pointers
-void BCM2712_init(const mmio_t *);
+void BCM2712_init(const peripheral_t *);

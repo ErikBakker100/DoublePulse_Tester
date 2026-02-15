@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "../../include/soc.h"
 #include "../../BCM2835/include/BCM2835.h"
 #include "../../BCM2837/include/BCM2837.h"
 
@@ -360,4 +361,4 @@ extern volatile bcm2711_int_gic_400_gich_regs_t *INT_GICH_2711;
 extern volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICV_2711;
 
 // Initializes the BCM2711 peripherals base address pointers
-void BCM2711_init(const mmio_t *);
+void BCM2711_init(const peripheral_t *);

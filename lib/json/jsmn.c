@@ -2,7 +2,7 @@
 #include "../boards/soc/include/timers.h"
 #include "../general/include/serial.h"
 
-#define TIMER_ID 3 // Use timer 3 for timeouts. Timers are numbered 0-3
+#define TIMER_ID 2 // Use timer 3 for timeouts. Timers are numbered 0-3
 
 /**
  * Creates a new parser based over a given buffer with an array of tokens
@@ -352,15 +352,22 @@ uint16_t read_json(char * const buf, uint16_t maxlen, uint32_t timeout_us) {
     buf[0] = '\0';
 
     while (!timer->expired(TIMER_ID) && (i < maxlen - 1)) { // while no timeout and buffer not full
-        if (!rx_available()) continue;
+      while (rx_available()) {
+        int16_t c = rx_get();
+        if (c < 0) break;
+
+        buf[i++] = (char)c;
+      }
+      
+      if (!rx_available()) continue;
         int16_t c = rx_get();
         if (c < 0) continue;
 
         buf[i++] = (char)c;
     }
-   // Timeout or overflow → reset
-   timer->clear(TIMER_ID); // reset timeout flag
-   buf[i] = '\0';
+    // Timeout or overflow → reset
+    timer->clear(TIMER_ID); // reset timeout flag
+    buf[i] = '\0';
    return i;
 }
 

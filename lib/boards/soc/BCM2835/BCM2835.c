@@ -4,7 +4,7 @@
 #include "timers/include/timers_BCM2835.h"
 #include "mailbox/include/mailbox_BCM2835.h"
 
-volatile bcm2835_sys_timer_regs_t *SYS_TMR_2835;
+bcm2835_sys_timer_regs_t *SYS_TMR_2835;
 volatile bcm2835_dma_ctrl_regs_t *DMA00_2835;
 volatile bcm2835_dma_ctrl_regs_t *DMA01_2835;
 volatile bcm2835_dma_ctrl_regs_t *DMA02_2835;
@@ -25,26 +25,26 @@ volatile bcm2835_dma_irq_stat_reg_t *DMAIRQ_2835;
 volatile bcm2835_dma_enable_reg_t *DMAEN_2835;
 volatile bcm2835_ic_regs_t *IC_2835;
 volatile bcm2835_arm_timer_regs_t *ARM_TMR_2835;
-volatile bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2835;
+bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2835;
 volatile bcm2835_gp_clks_regs_t *GPIO_CLKS_2835;
-volatile bcm2835_gpio_regs_t *GPIO_2835;
-volatile bcm2835_uart_regs_t *UART0_2835;                 // PL011 UART
+bcm2835_gpio_regs_t *GPIO_2835;
+volatile bcm2835_uart_regs_t *UART0_2835;   // PL011 UART
 volatile bcm2835_sdhost_regs_t *SDHOST_2835;
 volatile bcm2835_pcm_regs_t *PCM_2835;
 volatile bcm2835_spi_regs_t *SPI0_2835;
 volatile bcm2835_i2c_regs_t *I2C0_2835;
 volatile bcm2835_pwm_regs_t *PWM0_2835;
 volatile bcm2835_i2c_spi_slave_regs_t *I2C_SPI_SLAVE_2835;
-volatile bcm2835_aux_regs_t *AUX_2835;
-volatile bcm2835_mu_regs_t *MU_2835;                     // Mini UART
+bcm2835_aux_regs_t *AUX_2835;
+bcm2835_mu_regs_t *MU_2835;                 // Mini UART
 volatile bcm2835_aux_spi_regs_t *SPI1_2835;
 volatile bcm2835_aux_spi_regs_t *SPI2_2835;
 volatile bcm2835_emmc_regs_t *EMMC_2835;
 volatile bcm2835_i2c_regs_t *I2C1_2835;
 volatile bcm2835_usb_regs_t *USB_2835;
 
-void BCM2835_init(const mmio_t *mmio) {
-    SYS_TMR_2835 = (volatile bcm2835_sys_timer_regs_t *)(mmio->base + 0x3000);
+void BCM2835_init(const peripheral_t *mmio) {
+    SYS_TMR_2835 = (bcm2835_sys_timer_regs_t *)(mmio->base + 0x3000);
     DMA00_2835 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7000);
     DMA01_2835 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7100);
     DMA02_2835 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7200);
@@ -66,8 +66,8 @@ void BCM2835_init(const mmio_t *mmio) {
     IC_2835 = (volatile bcm2835_ic_regs_t *)(mmio->base + 0xB200);
     ARM_TMR_2835 = (volatile bcm2835_arm_timer_regs_t *)(mmio->base + 0xB400);
     GPIO_CLKS_2835 = (volatile bcm2835_gp_clks_regs_t*)(mmio->base + 0x101070);
-    MAILBOX_VC_2835 = (volatile bcm2835_mailbox_vc_regs_t *)(mmio->base + 0xB880);
-    GPIO_2835 = (volatile bcm2835_gpio_regs_t *)(mmio->base + 0x200000);
+    MAILBOX_VC_2835 = (bcm2835_mailbox_vc_regs_t  *)(mmio->base + 0xB880);
+    GPIO_2835 = (bcm2835_gpio_regs_t *)(mmio->base + 0x200000);
     UART0_2835 = (volatile bcm2835_uart_regs_t *)(mmio->base + 0x201000);
     SDHOST_2835 = (volatile bcm2835_sdhost_regs_t *)(mmio->base + 0x202000);
     PCM_2835 = (volatile bcm2835_pcm_regs_t *)(mmio->base + 0x203000);
@@ -75,8 +75,8 @@ void BCM2835_init(const mmio_t *mmio) {
     I2C0_2835 = (volatile bcm2835_i2c_regs_t *)(mmio->base + 0x205000);
     PWM0_2835 = (volatile bcm2835_pwm_regs_t *)(mmio->base + 0x20C000);
     I2C_SPI_SLAVE_2835 = (volatile bcm2835_i2c_spi_slave_regs_t *)(mmio->base + 0x214000);
-    AUX_2835 = (volatile bcm2835_aux_regs_t *)(mmio->base + 0x215000);
-    MU_2835 = (volatile bcm2835_mu_regs_t *)(mmio->base + 0x215000 + 0x40);
+    AUX_2835 = (bcm2835_aux_regs_t *)(mmio->base + 0x215000);
+    MU_2835 = (bcm2835_mu_regs_t *)(mmio->base + 0x215000 + 0x40);
     SPI1_2835 = (volatile bcm2835_aux_spi_regs_t *)(mmio->base + 0x215000 + 0x80);
     SPI2_2835 = (volatile bcm2835_aux_spi_regs_t *)(mmio->base + 0x215000 + 0xC);
     I2C1_2835 = (volatile bcm2835_i2c_regs_t *)(mmio->base + 0x804000);
@@ -89,7 +89,7 @@ void BCM2835_init(const mmio_t *mmio) {
     SYS_TMR_2835->C[3] = 0; // Clear timer counter registers
 
     bcm2835_gpio_init();
-    bcm2835_mu_init();
     bcm2835_mailbox_vc_init();
     bcm2835_timer_init();
+    bcm2835_uart_init();
 }

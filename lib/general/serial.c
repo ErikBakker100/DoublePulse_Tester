@@ -30,9 +30,35 @@ void mu_put_uint(const uint32_t x) {
     }
 }
 
-void mu_put_hex32(const uint32_t value) {
-    uart->putc('0');
-    uart->putc('x');
+void mu_put_hex8(const uint8_t value, bool leading) {
+    if (leading) {
+        uart->putc('0');
+        uart->putc('x');
+    }
+    for (int i = 4; i >= 0; i -= 4) {
+        char nibble = (value >> i) & 0xF;
+        char c = (nibble < 10) ? ('0' + nibble) : ('A' + nibble - 10);
+        uart->putc(c);
+    }
+}
+
+void mu_put_hex16(const uint16_t value, bool leading) {
+    if (leading) {
+        uart->putc('0');
+        uart->putc('x');
+    }
+    for (int i = 12; i >= 0; i -= 4) {
+        char nibble = (value >> i) & 0xF;
+        char c = (nibble < 10) ? ('0' + nibble) : ('A' + nibble - 10);
+        uart->putc(c);
+    }
+}
+
+void mu_put_hex32(const uint32_t value, bool leading) {
+    if (leading) {
+        uart->putc('0');
+        uart->putc('x');
+    }
     for (int i = 28; i >= 0; i -= 4) {
         char nibble = (value >> i) & 0xF;
         char c = (nibble < 10) ? ('0' + nibble) : ('A' + nibble - 10);
@@ -40,9 +66,11 @@ void mu_put_hex32(const uint32_t value) {
     }
 }
 
-void mu_put_hex64(const uint64_t value) {
-    uart->putc('0');
-    uart->putc('x');
+void mu_put_hex64(const uint64_t value, bool leading) {
+    if (leading) {
+        uart->putc('0');
+        uart->putc('x');
+    }
     for (int i = 60; i >= 0; i -= 4) {
         char nibble = (value >> i) & 0xF;
         char c = (nibble < 10) ? ('0' + nibble) : ('A' + nibble - 10);
@@ -92,7 +120,7 @@ void rx_put(const uint8_t c) {
     }
 }
 
-int16_t rx_get(void) {
+int8_t rx_get(void) {
     if (RX_BUF->head == RX_BUF->tail)
         return -1;
     uint8_t c = RX_BUF->buffer[RX_BUF->tail];

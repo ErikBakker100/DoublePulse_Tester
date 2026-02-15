@@ -6,6 +6,7 @@
 #include "../../include/timers.h"
 #include "../../include/gpio.h"
 #include "../../../../general/include/serial.h"
+#include "../../../../general/include/config.h" // for BLINK_TIMER
 
 void bcm2837_irq_disable(void);
 void bcm2837_irq_enable(void);
@@ -40,13 +41,14 @@ void bcm2837_irq_init_core0(void) {
 
 void bcm2837_irq_handler_core0(void) {
     if (AUX_2837->IRQ & 1) {  // Mini UART interrupt
-        rx_put(uart->getc());
+        uart->getc();
     }
+    
     if (SYS_TMR_2837->CS & (1 << 1)) { // System Timer C1 interrupt
         SYS_TMR_2837->CS = (1 << 1);   // Clear the interrupt
         timer->clear(1);               // Clear timer 1 expiration flag
-        gpio->toggle(21);              // Toggle GPIO 21 for heart beat indication
-        timer->set(1, 1000000);        // Re-set timer 1 for 1 second
+        gpio->toggle(STATUS_PIN);              // Toggle GPIO 21 for heart beat indication
+        timer->set(1, BLINK_TIMER);        // Re-set timer 1 for 1 second
     }
 }
 

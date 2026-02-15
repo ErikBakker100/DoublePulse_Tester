@@ -17,12 +17,14 @@ void mu_puts(const char *s);
 //char mu_getc(void);
 void mu_put_uint(const uint32_t n);
 uint16_t read_json(char * const buf, uint16_t maxlen, uint32_t timeout);
-void mu_put_hex32(const uint32_t value);
-void mu_put_hex64(const uint64_t value);
+void mu_put_hex8(const uint8_t value, bool leading);    // Leading true will use leading '0x', false is without
+void mu_put_hex16(const uint16_t value, bool leading);
+void mu_put_hex32(const uint32_t value, bool leading);
+void mu_put_hex64(const uint64_t value, bool leading);
 void mu_put_bits8(const uint8_t value);
 void mu_put_bits16(const uint16_t value);
 void mu_put_bits32(const uint32_t value);
 void mu_put_bits64(const uint64_t value);
 void rx_put(const uint8_t c);
 bool rx_available(void);
-int16_t rx_get(void);
+int8_t rx_get(void);

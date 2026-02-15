@@ -1,12 +1,11 @@
 #include "include/BCM2836.h"
-#include "../include/mmio.h"
 #include "gpio/include/gpio_BCM2836.h"
 #include "irq/include/irq_BCM2836.h"
 #include "uart/include/uart_BCM2836.h"
 #include "timers/include/timers_BCM2836.h"
 #include "mailbox/include/mailbox_BCM2836.h"
 
-volatile bcm2835_sys_timer_regs_t *SYS_TMR_2836;
+bcm2835_sys_timer_regs_t *SYS_TMR_2836;
 volatile bcm2835_dma_ctrl_regs_t *DMA00_2836;
 volatile bcm2835_dma_ctrl_regs_t *DMA01_2836;
 volatile bcm2835_dma_ctrl_regs_t *DMA02_2836;
@@ -27,18 +26,18 @@ volatile bcm2835_dma_irq_stat_reg_t *DMAIRQ_2836;
 volatile bcm2835_dma_enable_reg_t *DMAEN_2836;
 volatile bcm2835_ic_regs_t *IC_2836;
 volatile bcm2835_arm_timer_regs_t *ARM_TMR_2836;
-volatile bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2836;
+bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2836;
 volatile bcm2835_gp_clks_regs_t *GPIO_CLKS_2836;
-volatile bcm2835_gpio_regs_t *GPIO_2836;
-volatile bcm2835_uart_regs_t *UART0_2836;                 // PL011 UART
+bcm2835_gpio_regs_t *GPIO_2836;
+volatile bcm2835_uart_regs_t *UART0_2836;   // PL011 UART
 volatile bcm2835_sdhost_regs_t *SDHOST_2836;
 volatile bcm2835_pcm_regs_t *PCM_2836;
 volatile bcm2835_spi_regs_t *SPI0_2836;
 volatile bcm2835_i2c_regs_t *I2C0_2836;
 volatile bcm2835_pwm_regs_t *PWM0_2836;
 volatile bcm2835_i2c_spi_slave_regs_t *I2C_SPI_SLAVE_2836;
-volatile bcm2835_aux_regs_t *AUX_2836;
-volatile bcm2835_mu_regs_t *MU_2836;                     // Mini UART
+bcm2835_aux_regs_t *AUX_2836;
+bcm2835_mu_regs_t *MU_2836;                 // Mini UART
 volatile bcm2835_aux_spi_regs_t *SPI1_2836;
 volatile bcm2835_aux_spi_regs_t *SPI2_2836;
 volatile bcm2835_emmc_regs_t *EMMC_2836;
@@ -53,8 +52,8 @@ volatile bcm2836_core_mailbox_ctrl_regs_t *CORE_MB_CTRL_2836;
 volatile bcm2836_isr_regs_t *ISR_2836;
 volatile bcm2836_al_mailboxes_regs_t *MAILBOX_2836;    // ARM Local Mailboxes
 
-void BCM2836_init(const mmio_t *mmio) {
-    SYS_TMR_2836 = (volatile bcm2835_sys_timer_regs_t *)(mmio->base + 0x3000);
+void BCM2836_init(const peripheral_t *mmio) {
+    SYS_TMR_2836 = (bcm2835_sys_timer_regs_t *)(mmio->base + 0x3000);
     DMA00_2836 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7000);
     DMA01_2836 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7100);
     DMA02_2836 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7200);
@@ -75,9 +74,9 @@ void BCM2836_init(const mmio_t *mmio) {
     DMAEN_2836 = (volatile bcm2835_dma_enable_reg_t *)(mmio->base + 0x7FF0);
     IC_2836 = (volatile bcm2835_ic_regs_t *)(mmio->base + 0xB200);
     ARM_TMR_2836 = (volatile bcm2835_arm_timer_regs_t *)(mmio->base + 0xB400);
-    MAILBOX_VC_2836 = (volatile bcm2835_mailbox_vc_regs_t *)(mmio->base + 0xB880);
+    MAILBOX_VC_2836 = (bcm2835_mailbox_vc_regs_t *)(mmio->base + 0xB880);
     GPIO_CLKS_2836 = (volatile bcm2835_gp_clks_regs_t*)(mmio->base + 0x101070);
-    GPIO_2836 = (volatile bcm2835_gpio_regs_t *)(mmio->base + 0x200000);
+    GPIO_2836 = (bcm2835_gpio_regs_t *)(mmio->base + 0x200000);
     UART0_2836 = (volatile bcm2835_uart_regs_t *)(mmio->base + 0x201000);
     SDHOST_2836 = (volatile bcm2835_sdhost_regs_t *)(mmio->base + 0x202000);
     PCM_2836 = (volatile bcm2835_pcm_regs_t *)(mmio->base + 0x203000);
@@ -85,8 +84,8 @@ void BCM2836_init(const mmio_t *mmio) {
     I2C0_2836 = (volatile bcm2835_i2c_regs_t *)(mmio->base + 0x205000);
     PWM0_2836 = (volatile bcm2835_pwm_regs_t *)(mmio->base + 0x20C000);
     I2C_SPI_SLAVE_2836 = (volatile bcm2835_i2c_spi_slave_regs_t *)(mmio->base + 0x214000);
-    AUX_2836 = (volatile bcm2835_aux_regs_t *)(mmio->base + 0x215000);
-    MU_2836 = (volatile bcm2835_mu_regs_t *)(mmio->base + 0x215000 + 0x40);
+    AUX_2836 = (bcm2835_aux_regs_t *)(mmio->base + 0x215000);
+    MU_2836 = (bcm2835_mu_regs_t *)(mmio->base + 0x215000 + 0x40);
     SPI2_2836 = (volatile bcm2835_aux_spi_regs_t *)(mmio->base + 0x215000 + 0xC0);
     EMMC_2836 = (volatile bcm2835_emmc_regs_t *)(mmio->base + 0x300000);
     I2C1_2836 = (volatile bcm2835_i2c_regs_t *)(mmio->base + 0x804000);
@@ -111,6 +110,6 @@ void BCM2836_init(const mmio_t *mmio) {
     bcm2836_mailbox_vc_init();
     bcm2836_mailbox_init();
     bcm2836_timer_init();
-    bcm2836_mu_init();
+    bcm2836_uart_init();
 }
 

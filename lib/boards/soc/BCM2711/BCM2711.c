@@ -1,5 +1,4 @@
 #include "include/BCM2711.h"
-#include "../include/mmio.h"
 #include "gpio/include/gpio_BCM2711.h"
 
 volatile bcm2835_sys_timer_regs_t *SYS_TMR_2711;
@@ -54,7 +53,7 @@ volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICC_2711;
 volatile bcm2711_int_gic_400_gich_regs_t *INT_GICH_2711;
 volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICV_2711;
 
-void BCM2711_init(const mmio_t *mmio) {
+void BCM2711_init(const peripheral_t *mmio) {
     SYS_TMR_2711 = (volatile bcm2835_sys_timer_regs_t *)(mmio->base + 0x003000);
     DMA00_2711 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7000);
     DMA01_2711 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7100);

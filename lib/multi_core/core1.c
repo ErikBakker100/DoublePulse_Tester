@@ -29,10 +29,8 @@ void start_core1(void) {
 
 // Entry point for core1
 void core_main_1() {
-    gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN);
-    gpio->clear(OUTPUT_PIN); // Initial state low (inactive)
-    irq->init_core1();
-
+    gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin
+    irq->init_core1();                      // Initialize IRQs for core1
     while (1) {
         gpio->set(OUTPUT_PIN);
         DELAY(delay1); // PulseWidth1

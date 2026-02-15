@@ -1,5 +1,4 @@
 #pragma once
-
 typedef enum {
     CPUID,   // Cortex-M
     MIDR,    // Cortex-A (EL1)

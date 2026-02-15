@@ -1,81 +1,91 @@
 #include "include/boards.h"
-#include "soc/BCM2835/include/BCM2835.h"
-#include "soc/BCM2836/include/BCM2836.h"
-#include "soc/BCM2837/include/BCM2837.h"
-#include "soc/BCM2711/include/BCM2711.h"
-#include "soc/BCM2712/include/BCM2712.h"
 #include "soc/include/mailbox.h"
-#include "soc/include/mmio.h"
 
-board_t *board_data;
-board_ops_t *board;
+void decode_board_revision(board_data_t* board);
+board_data_t board;
 
-board_t boards[] = {
-    /* Gebruik expliciet de veldnaam .soc voor het tweede argument */
-    #define X(name, soc) { .model = name, .text = #name, soc},
+board_name_list_t boards[] = {
+    #define X(txt, nr, soc_enum, desc) { \
+        .name = #txt, \
+        .id = nr, \
+        .soc = soc_enum, \
+        .description = desc \
+    },
     BOARD_LIST(X)
     #undef X
 };
 
-void board_init(void) {
-    board_data = NULL;
-    for (board_name_t i = 0; i < BOARD_COUNT; i++) {
-        if (strcmp(RPI_DEFINE, boards[i].text) == 0) {
-            board_data = &boards[i];
-            break;
+const char* mem_size_table[] = {
+    "256 MB",
+    "512 MB",
+    "1 GB",
+    "2 GB",
+    "4 GB",
+    "8 GB",
+    "16 GB",
+    "32 GB"
+};
+
+const char* manufacturer_table[] = {
+    "Sony UK",
+    "Egoman",
+    "Embest",
+    "Sony Japan",
+    "Embest",
+    "Stadium",
+    "unknown",
+    "unknown"
+};
+
+bool board_init(board_data_t *board, const char* name) {
+    board->baudrate = BAUDRATE;
+    board->core_freq_mhz = CORE_FREQ;
+    bool found = false;
+    if (board != NULL) {
+        for (uint8_t i = 0; i < BOARD_COUNT; i++) {
+            if (strcmp(name, boards[i].name) == 0) {
+                board->used = &boards[i];
+                found = true;
+                break;
+            }
         }
     }
-    if (board_data == NULL) {               // board not found, error
-        return;
-    }
-    mmio_set(board_data->soc);              // Find the right base addresses for board_data->soc = soc_t in mmio.h
-    cpu_info(board_data->soc);              // Read the available CPU info from the CPU
-    switch (board_data->soc) {
-        case BCM2835:
-            BCM2835_init(mmio);
-            break;
-        case BCM2836:
-            BCM2836_init(mmio);
-            break;
-        case BCM2837:
-            BCM2837_init(mmio);
-            break;
-        case RP3A0:
-            BCM2837_init(mmio);
-            break;
-        case BCM2837B0:
-            BCM2837_init(mmio);
-            break;
-        case BCM2711:
-            BCM2711_init(mmio);
-            break;
-        case BCM2712:
-            BCM2712_init(mmio);
-            break;
-        case UNKNOWN:                       // board not found, error
-            break;
-    }
-    board_data->baudrate = BAUDRATE;
-    board_data->core_freq_mhz = CORE_FREQ;
+    soc_init(board->used->soc);
+    return found;
 };
 
-void board_info(void){
-    board_data->firmware_version = mailbox_vc->get_firmware_version();
-    board_data->board_model = mailbox_vc->get_board_model();
-    board_data->board_revision = mailbox_vc->get_board_revision();
-    board_data->serial = mailbox_vc->get_board_serial();
-    board_data->MAC = mailbox_vc->get_mac_address();
-    mailbox_vc->get_arm_memory(&board_data->arm_memory_base, &board_data->arm_memory_size);
-    board_data->soc_temperature = mailbox_vc->get_soc_temperature();
-    mailbox_vc->get_clock_rates(board_data->clock_rates);
-    mailbox_vc->get_clock_rates_measured(board_data->clock_rates_measured);
-    mailbox_vc->get_max_clock_rates(board_data->max_clock_rates);
-    mailbox_vc->get_min_clock_rates(board_data->min_clock_rates);
+void board_info(board_data_t *board){
+    board->firmware_date = get_firmware_revision();
+    board->revision_raw_value = get_board_revision();
+    decode_board_revision(board);
+    soc_info(board->used->soc);
+    board->serial = get_board_serial();
+    get_mac_address(board->mac_address);
+    get_arm_memory(&board->arm_memory_base, &board->arm_memory_size);
+    get_gpu_memory(&board->gpu_memory_base, &board->gpu_memory_size);
+    board->soc_temperature = get_soc_temperature();
+    get_clock_rates(board->clock_rates);
+    get_clock_rates_measured(board->clock_rates_measured);
+    get_max_clock_rates(board->max_clock_rates);
+    get_min_clock_rates(board->min_clock_rates);
 }
 
-static board_ops_t internal_board_ops = {
-    .init = board_init,
-    .info = board_info
-};
 
-board_ops_t *board = &internal_board_ops;
+void decode_board_revision(board_data_t* board) {
+    // Controleer of het de nieuwe stijl revisiecode is (Bit 23)
+    board->rev_scheme = (board->revision_raw_value >> 23) & 0x1;
+    
+    if (board->rev_scheme) {
+        // Nieuwe stijl
+        board->memory_size  = mem_size_table[(board->revision_raw_value >> 20) & 0x7];
+        board->manufacturer = manufacturer_table[(board->revision_raw_value >> 16) & 0x7];
+        soc_list_t id = (board->revision_raw_value >> 12) & 0xF;
+        board->read    = id;
+        board->revision_model_type = (board->revision_raw_value >> 4)  & 0xFF;
+        board->revision_num = (board->revision_raw_value >> 0)  & 0xF;
+    } else {
+        // Oude stijl (pre-Pi 2) - velden zijn hier anders
+        board->memory_size  = 0; // Niet gecodeerd in oude stijl
+        board->revision_model_type   = board->revision_raw_value & 0xFFFFFF; // Hele waarde is model/rev
+    }
+}

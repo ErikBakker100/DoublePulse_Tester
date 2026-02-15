@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #define OUTPUT_PIN ((uint8_t)OUTPUT)        // GPIO pin used for output, set in CMakeLists.txt
+#define STATUS_PIN 21                       // GPIO pin used for status LED, used for heart beat indication
 
 #define BAUDRATE 115200
 
@@ -13,3 +14,4 @@ extern uint32_t Intervals[4]; // Array to hold the intervals
 
 #define CPUID_REG (*(volatile uint32_t *)0xE000ED00)
 
+#define BLINK_TIMER 100000

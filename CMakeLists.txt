@@ -12,9 +12,9 @@ set(ARCH "arm64" CACHE STRING "Target architecture")
 set_property(CACHE ARCH PROPERTY STRINGS arm32 arm64)
 validate_choice(ARCH arm32 arm64)
 
-set(RPI_MODEL "Z2" CACHE STRING "Raspberry Pi model")
-set_property(CACHE RPI_MODEL PROPERTY STRINGS Z1 Z2 3A 3B 3B+ 4B 5)
-validate_choice(RPI_MODEL Z1 Z2 3A 3B 3B+ 4B 5)
+set(RPI_DEFINE "RPIZ2W" CACHE STRING "Raspberry Pi model")
+set_property(CACHE RPI_DEFINE PROPERTY STRINGS RPIA RPIB RPIA_PLUS RPIB_PLUS RPI2B RPIALPHA RPICM1 RPI3B_V11 RPIZ1 RPICM3 RPIZ1W RPI3B RPI3A_PLUS RPICM3_PLUS RPI4B RPI3B_PLUS RPI400 RPICM4 RPIZ2W RPI5 RPICM5 RPI500 RPICM5_LITE RPICM0)
+validate_choice(RPI_DEFINE RPIA RPIB RPIA_PLUS RPIB_PLUS RPI2B RPIALPHA RPICM1 RPI3B_V11 RPIZ1 RPICM3 RPIZ1W RPI3B RPI3A_PLUS RPICM3_PLUS RPI4B RPI3B_PLUS RPI400 RPICM4 RPIZ2W RPI5 RPICM5 RPI500 RPICM5_LITE RPICM0)
 
 set(DUALCORE "on" CACHE STRING "Dual core support")
 set_property(CACHE DUALCORE PROPERTY STRINGS on off)
@@ -25,14 +25,31 @@ print_choice(ARCH
     arm64 "arm64 build"
 )
 
-print_choice(RPI_MODEL
-    Z1 "Building for Raspberry Pi Zero 1"
-    Z2 "Building for Raspberry Pi Zero 2(W)"
-    3A "Building for Raspberry Pi 3A"
-    3B "Building for Raspberry Pi 3B"
-    3B+ "Building for Raspberry Pi 3B+"
-    4B "Building for Raspberry Pi 4B"
-    5 "Building for Raspberry Pi 5"
+print_choice(RPI_DEFINE
+    RPIA            " "
+    RPIB            " "
+    RPIA_PLUS       " "
+    RPIB_PLUS       " "
+    RPI2B           " "
+    RPIALPHA        " "
+    RPICM1          " "
+    RPI3B_V11       "Building for Raspberry Pi 3B"
+    RPIZ1           "Building for Raspberry Pi Zero 1"
+    RPICM3          " "
+    RPIZ1W          " "
+    RPI3B           "Building for Raspberry Pi 3B"
+    RPI3A_PLUS      "Building for Raspberry Pi 3A+"
+    RPICM3_PLUS     " "
+    RPI4B           "Building for Raspberry Pi 4B"
+    RPI3B_PLUS      " "
+    RPI400          " "
+    RPICM4          " "
+    RPIZ2W          "Building for Raspberry Pi Zero 2(W)"
+    RPI5            "Building for Raspberry Pi 5"
+    RPICM5          " "
+    RPI500          " "
+    RPICM5_LITE     " "
+    RPICM0          " "
 )
 
 print_choice(DUALCORE
@@ -43,12 +60,12 @@ print_choice(DUALCORE
 # ----------------------
 # Validating user choices
 # ----------------------
-if(RPI_MODEL STREQUAL "Z1")
+if(RPI_DEFINE STREQUAL "RPIA" OR RPI_DEFINE STREQUAL "RPIB" OR RPI_DEFINE STREQUAL "RPIA_PLUS" OR RPI_DEFINE STREQUAL "RPIB_PLUS" OR RPI_DEFINE STREQUAL "RPIALPHA" OR RPI_DEFINE STREQUAL "RPICM1" OR RPI_DEFINE STREQUAL "RPIZ1" OR RPI_DEFINE STREQUAL "RPIZ1W")
     if(ARCH STREQUAL "arm64")
-        message(FATAL_ERROR "Raspberry Pi Zero 1 does not support arm64")
+        message(FATAL_ERROR "Model does not support arm64")
     endif()
     if(DUALCORE STREQUAL "on")
-        message(FATAL_ERROR "Raspberry Pi Zero 1 does not support dual-core")
+        message(FATAL_ERROR "Model does not support dual-core")
     endif()
 endif()
 
@@ -56,9 +73,8 @@ endif()
 # Raspberry Pi CPU map
 # ----------------------
 
-if(RPI_MODEL STREQUAL "Z1")
+if(RPI_DEFINE STREQUAL "RPIZ1")
     # Raspberry Pi Zero / Zero W
-    set(RPI_DEFINE      RPIZ1)
     set(RPI_CPU         arm1176jzf-s)
     set(RPI_ARCH        armv6)
     set(RPI_ARM_BITS    arm32)
@@ -67,20 +83,18 @@ if(RPI_MODEL STREQUAL "Z1")
     set(OUTPUT          18)
     set(IMAGEFILE kernel.img)
 
-elseif(RPI_MODEL STREQUAL "Z2")
+elseif(RPI_DEFINE STREQUAL "RPIZ2W")
     # Raspberry Pi Zero 2 W
-    set(RPI_DEFINE      RPIZ2)
     set(RPI_CPU         cortex-a53)
     set(RPI_ARCH        armv8-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
     set(CORE_FREQ       500)
-    set(ARM_FREQ        250)
+    set(ARM_FREQ        600)
     set(OUTPUT          18)
     set(IMAGEFILE kernel8.img)
 
-elseif(RPI_MODEL STREQUAL "3A")
+elseif(RPI_DEFINE STREQUAL "RPI3A")
     # Raspberry Pi 3A
-    set(RPI_DEFINE      RPI3A)
     set(RPI_CPU         cortex-a53)
     set(RPI_ARCH        armv8-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
@@ -89,9 +103,8 @@ elseif(RPI_MODEL STREQUAL "3A")
     set(OUTPUT          18)
     set(IMAGEFILE kernel8.img)
 
-elseif(RPI_MODEL STREQUAL "3B")
+elseif(RPI_DEFINE STREQUAL "RPI3B")
     # Raspberry Pi 3B
-    set(RPI_DEFINE      RPI3B)
     set(RPI_CPU         cortex-a53)
     set(RPI_ARCH        armv8-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
@@ -100,9 +113,8 @@ elseif(RPI_MODEL STREQUAL "3B")
     set(OUTPUT          18)
     set(IMAGEFILE kernel8.img)
 
-elseif(RPI_MODEL STREQUAL "3B+")
+elseif(RPI_DEFINE STREQUAL "RPI3B_PLUS")
     # Raspberry Pi 3B+
-    set(RPI_DEFINE      RPI3B_PLUS)
     set(RPI_CPU         cortex-a53)
     set(RPI_ARCH        armv8-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
@@ -111,9 +123,8 @@ elseif(RPI_MODEL STREQUAL "3B+")
     set(OUTPUT          18)
     set(IMAGEFILE kernel8.img)
 
-elseif(RPI_MODEL STREQUAL "4B")
+elseif(RPI_DEFINE STREQUAL "RPI4B")
     # Raspberry Pi 4B
-    set(RPI_DEFINE      RPI4B)
     set(RPI_CPU         cortex-a72)
     set(RPI_ARCH        armv8-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
@@ -122,9 +133,8 @@ elseif(RPI_MODEL STREQUAL "4B")
     set(OUTPUT          18)
     set(IMAGEFILE kernel8.img)
 
-elseif(RPI_MODEL STREQUAL "5")
+elseif(RPI_DEFINE STREQUAL "RPI5")
     # Raspberry Pi 5
-    set(RPI_DEFINE      RPI5)
     set(RPI_CPU         cortex-a76)
     set(RPI_ARCH        armv8.2-a)
     set(RPI_ARM_BITS    ${ARCH})   # arm32 / arm64
@@ -208,13 +218,14 @@ if(ARCH STREQUAL "arm64")
 else() # 32-bit
     set(LINKER_LOAD_ADDR 0x8000)
     set(ARM_64BIT 0)
-    if(RPI_MODEL MATCHES "^(3A|3B|3B\\+)$")
+#RPIA RPIB RPIA_PLUS RPIB_PLUS RPI2B RPIALPHA RPICM1 RPI3B_V11 RPIZ1 RPICM3 RPIZ1W RPI3B RPI3A_PLUS RPICM3_PLUS RPI4B RPI3B_PLUS RPI400 RPICM4 RPIZ2W RPI5 RPICM5 RPI500 RPICM5_LITE RPICM0
+    if(RPI_DEFINE MATCHES "^(RPI3A|RPI3B|RPI3B_PLUS)$")
         set(KERNEL kernel4.img)
-    elseif(RPI_MODEL MATCHES "^(Z|Z1)$")
+    elseif(RPI_DEFINE MATCHES "^(RPIZ1|RPIZ1W)$")
         set(KERNEL kernel.img)
-    elseif(RPI_MODEL STREQUAL "Z2")
+    elseif(RPI_DEFINE STREQUAL "RPIZ2W")
         set(KERNEL kernel.img)   # Zero 2 gebruikt oude naam
-    elseif(RPI_MODEL MATCHES "^(4B)$")
+    elseif(RPI_DEFINE MATCHES "^(RPI4B)$")
         set(KERNEL kernel7l.img)
     else()
         message(FATAL_ERROR "Unknown RPI model for 32-bit kernel")
@@ -325,13 +336,13 @@ target_link_options(${PROJECT_NAME} PRIVATE
 # ----------------------
 
 # Decide which image files the Pi expects, and set Model-specific options
-if(RPI_MODEL STREQUAL "Z1")
+if(RPI_DEFINE STREQUAL "RPIZ1")
     set(BOOTFILES_DIR ${CMAKE_SOURCE_DIR}/CMakeFiles/boot/Z1)
     set(MODEL_CONFIG "")
-elseif(RPI_MODEL STREQUAL "Z2")
-    set(BOOTFILES_DIR ${CMAKE_SOURCE_DIR}/CMakeFiles/boot/Z2)
+elseif(RPI_DEFINE STREQUAL "RPIZ2W")
+    set(BOOTFILES_DIR ${CMAKE_SOURCE_DIR}/CMakeFiles/boot/Z2W)
     set(MODEL_CONFIG "")
-elseif(RPI_MODEL STREQUAL "4B")
+elseif(RPI_DEFINE STREQUAL "RPI4B")
     set(BOOTFILES_DIR ${CMAKE_SOURCE_DIR}/CMakeFiles/boot/4B)
     set(MODEL_CONFIG "[pi4]\narm_boost=1\nenable_jtag_gpio=1\n")
 endif()

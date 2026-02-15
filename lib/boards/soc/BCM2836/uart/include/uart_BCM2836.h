@@ -1,4 +1,4 @@
 #pragma once
 #include <stdint.h>
 
-void bcm2836_mu_init();
+void bcm2836_uart_init();

@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "../BCM2835/include/BCM2835.h"
 
 // GPIO
 typedef enum {
@@ -24,6 +25,12 @@ typedef struct {
     void (*set)(uint8_t pin);
     void (*clear)(uint8_t pin);
     void (*toggle)(uint8_t pin);
-    uint8_t (*read)(uint8_t pin);
+    uint32_t (*read)(uint8_t pin);
 } gpio_ops_t;
 extern const gpio_ops_t *gpio;
+
+void bcm283x_gpio_init_pin(volatile bcm2835_gpio_regs_t *regs, uint8_t pin, gpio_mode_t mode, gpio_pud_t pud);
+void bcm283x_gpio_set(volatile bcm2835_gpio_regs_t *regs, uint8_t pin);
+void bcm283x_gpio_clear(volatile bcm2835_gpio_regs_t *regs, uint8_t pin);
+void bcm283x_gpio_toggle(volatile bcm2835_gpio_regs_t *regs, uint8_t pin);
+uint32_t bcm283x_gpio_read(volatile bcm2835_gpio_regs_t *regs, uint8_t pin);

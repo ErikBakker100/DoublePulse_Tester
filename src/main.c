@@ -1,10 +1,10 @@
-// Double Pulse Generator for Raspberry Pi Zero, Zero 2 or 4B
+// Double Pulse Generator for Raspberry Pi Zero, Zero 2, 4B, .....
 // Erik Bakker 2025
 // Partly used from Teensy 4.0 Signal Generator, Electronics Workshop, Robin O'Reilly
 
 #include "../lib/general/include/config.h"
 #include "../lib/boards/include/boards.h"
-#include "../lib/general/include/stdlib.h"  // Include standard library for string functions, TO DO check with minuart functions, extract string functions form minuart
+#include "../lib/general/include/stdlib.h"
 #include "../lib/boards/soc/include/gpio.h"
 #include "../lib/boards/soc/include/uart.h"
 #include "../lib/boards/soc/include/irq.h"
@@ -13,6 +13,7 @@
 #include "../lib/multi_core/include/core1.h"
 #include "../lib/json/include/jsmn.h"
 #include "../lib/general/include/serial.h"
+#include "../lib/general/include/date_time.h"
 
 // Timing Variables
 //  _____________                   ____________
@@ -23,11 +24,12 @@ static char jsonString[CHAR_BUFFER] = {0};  // Uart buffer for receiving JSON st
 // Core0 is reponsible for updating parameters and communicating with the outside
 // Core1 is generating the pulses based on the values in 'Intervals[]'
 
+
 void core_main_0(uint32_t arg0, uint32_t arg1) {
-  board->init();                            // check board and set mmio_base pointers.
-  board->info();                            // Get board information via mailbox
-  start_core1();                            // Start double pulse generator on core1
-//  mu_puts("> **************Dual Pulse Generator**************\r\n");
+  if (!board_init(&board, RPI_DEFINE)) return; // check board and set pointers, if false we can not continue.
+  board_info(&board);
+  uart->set(BAUDRATE);                      // Initialize UART for BAUDRATE
+  mu_puts("> ************** Dual Pulse Generator **************\r\n");
   mu_puts("> Usage: Send JSON string, for e.g {\"pulseWidth1\": 70, \"interPulseDelay\": 30, \"pulseWidth2\": 50, \"pulseInterval\": 500}.\r\n");
   mu_puts("> Using GPIO: ");
   mu_put_uint(OUTPUT_PIN);
@@ -35,13 +37,107 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts("> _______________                 ______________\r\n");
   mu_puts("> | pulseWidth1 | interPulseDelay | pulseWith2 | pulseInterval |\r\n");
   mu_puts(">      70       ______ 30 _________     50     ______ 500_______\r\n");
+  mu_puts("> ******************* Used Board *******************\r\n");
+  mu_puts("\r\n> Model:                   ");
+  mu_puts(board.used->name);
+  mu_puts(", ");
+  mu_puts(board.memory_size);
+  mu_puts(", made by: ");
+  mu_puts(board.manufacturer);
+  mu_puts(", ");
+  for (uint8_t i = 0; i < BOARD_COUNT; i++) {
+    if (boards[i].id == board.revision_model_type) {
+      mu_puts(boards[i].description);
+      break;
+    }
+  }
+  mu_puts(", ");
+  if (board.rev_scheme == 0) {
+    mu_puts("old revision scheme");
+  } else if (board.rev_scheme == 1) {
+    mu_puts("new revision scheme");
+  } else {
+    mu_puts("unknown revision scheme");
+  }
+  mu_puts("\r\n> SOC set by user:         ");
+  mu_puts(soc.name);
+  mu_puts(", read from board: ");
+  mu_puts((char*)soc_name_table[board.read]);
+  mu_puts("\r\n> Using CPU:               ");
+  mu_puts(soc.cpu->architecture->name);
+  mu_puts(", implementer: ");
+  mu_puts(soc.cpu->implementer->name);
+  mu_puts(", ");
+  mu_put_hex16(soc.cpu->part->partnum, true);
+  mu_puts(", ");
+  mu_puts(soc.cpu->part->name);
+  mu_puts(", revision: ");
+  mu_puts(soc.cpu->rNpM);
+  mu_puts("\r\n> Using Addresses:         ");
+  mu_put_hex32(soc.mmio->base, true);
+  mu_puts(", ");
+  mu_put_hex32(soc.mmio->base_end, true);
+  mu_puts(", ");
+  mu_put_hex32(soc.mmio->gpu_io_base, true);
+  mu_puts(", ");
+  mu_put_hex32(soc.mmio->gpu_mem_base, true);
+  mu_puts(", ");
+  mu_put_hex32(soc.mmio->local_periph_base, true);
+  board_info(&board);
+  format_firmware_date_time(board.firmware_date, &date_time);
+  mu_puts("\r\n> VC firmware date:        ");
+  mu_put_uint(date_time.day);
+  mu_puts(" ");
+  mu_put_uint(date_time.month);
+  mu_puts(" ");
+  mu_put_uint(date_time.year);
+  mu_puts(" ");
+  mu_put_uint(date_time.hour);
+  mu_puts(":");
+  mu_put_uint(date_time.minute);
+  mu_puts(":");
+  mu_put_uint(date_time.second);
+  mu_puts(", raw board id ");
+  mu_put_hex32(board.revision_raw_value, true);
+   mu_puts("\r\n> Serial nr.               ");
+  mu_put_hex32(board.serial, true);
+  mu_puts("\r\n> Amount of program RAM    ");
+  mu_put_uint((board.arm_memory_size / (1024 * 1024)));
+  mu_puts(", starting at address:  ");
+  mu_put_hex32(board.arm_memory_base, true);
+  mu_puts("\r\n> Amount of GPU RAM        ");
+  mu_put_uint((board.gpu_memory_size / (1024 * 1024)));
+  mu_puts(", starting at address:  ");
+  mu_put_hex32(board.gpu_memory_base, true);
+  mu_puts("\r\n> ARM Current clock rate:  ");
+  mu_put_uint(board.clock_rates[ARM_id]);
+  mu_puts("\r\n> CORE Current clock rate: ");
+  mu_put_uint(board.clock_rates[CORE_id]);  
+  mu_puts("\r\n> UART Current clock rate: ");
+  mu_put_uint(board.clock_rates[UART_id]);
+  mu_puts("\r\n> ARM max clock rate:      ");
+  mu_put_uint(board.max_clock_rates[ARM_id]);
+  mu_puts("\r\n> CORE max clock rate:     ");
+  mu_put_uint(board.max_clock_rates[CORE_id]);  
+  mu_puts("\r\n> UART max clock rate:     ");
+  mu_put_uint(board.max_clock_rates[UART_id]);
+  mu_puts("\r\n> MAC address:             ");
+  for (int i = 0; i < 6; i++) {
+    mu_put_hex8(board.mac_address[i], false);
+    if (i < 5) mu_puts(":");
+  }
+  mu_puts("\r\n> Chip temperature:        ");
+  mu_put_uint(board.soc_temperature);
+  mu_puts(" milli degrees Celsius\r\n");
+  mu_puts("\r\n> ****************************************************\r\n");
 
-  gpio->init_pin(21, GPIO_OUTPUT, PULL_DOWN);// Set GPIO 21 voor hart beat indication
-  timer->set(1, 1000000);                    // Initialize timer 1 for 1 second intervals
+  start_core1();                            // Start double pulse generator on core1
+  gpio->init_pin(STATUS_PIN, GPIO_OUTPUT, PULL_DOWN);// Set GPIO 21 voor hart beat indication
+  timer->set(1, BLINK_TIMER);                    // Initialize timer 1 for 1 second intervals
   irq->init_core0();                         // Initialize IRQs for core0
 
   while (1) {
-    if (read_json(jsonString, CHAR_BUFFER, (100000))) { // If a character is in the UART buffer, try to get the whole string, or timeout (at 115200 one byte is ~87usec).
+/*    if (read_json(jsonString, CHAR_BUFFER, (100000))) { // If a character is in the UART buffer, try to get the whole string, or timeout (at 115200 one byte is ~87usec).
       mu_puts("> Received: ");
       mu_puts(jsonString);                  // Print the received JSON string
       mu_puts("\r\n");
@@ -69,7 +165,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
       }
       // Assume the top-level element is an object
       if (t[0].type != JSMN_OBJECT) {
-        mu_puts(">ERR Parsing JSON: The top-level element is not an object.\r\n");
+        mu_puts("> ERR Parsing JSON: The top-level element is not an object.\r\n");
         continue;                           // Wait for next JSON string
       }
       // Loop through all keys in the JSON object
@@ -77,7 +173,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
         if (t[i].type == JSMN_STRING && t[i].size == 1) { // Check if the token is a string and has size 1
           char key[30];                     // Buffer to hold the key string
           if (t[i].type != JSMN_STRING) {
-            mu_puts(">ERR Parsing JSON: Expected a string\r\n");
+            mu_puts("> ERR Parsing JSON: Expected a string\r\n");
             continue;
           }
           if (t[i].end - t[i].start >= sizeof(key)) {
@@ -117,6 +213,6 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
           }
         }
       }
-    }
+    } */
   }
 }

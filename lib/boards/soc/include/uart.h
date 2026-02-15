@@ -1,11 +1,18 @@
 #pragma once
 #include <stdint.h>
+#include <stdbool.h>
+#include "../BCM2835/include/BCM2835.h"
 
 // UART
 typedef struct {
-    void (*init)(void);
+    void (*set)(uint32_t baudrate);
     void (*putc)(const char c);
     void (*flush_rx)(void);
-    const char (*getc)(void);
+    bool (*getc)(void);
 } uart_ops_t;
-extern const uart_ops_t *uart;
+extern uart_ops_t *uart;
+
+void mu_set(volatile bcm2835_mu_regs_t *mu_regs, bcm2835_aux_regs_t *aux_regs, uint32_t baudrate);
+bool mu_getc(volatile bcm2835_mu_regs_t *regs);
+void mu_putc(volatile bcm2835_mu_regs_t *regs, const char c);
+void mu_flush_rx(volatile bcm2835_mu_regs_t *regs);
