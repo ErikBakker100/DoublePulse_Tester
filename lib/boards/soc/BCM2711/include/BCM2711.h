@@ -361,4 +361,4 @@ extern volatile bcm2711_int_gic_400_gich_regs_t *INT_GICH_2711;
 extern volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICV_2711;
 
 // Initializes the BCM2711 peripherals base address pointers
-void BCM2711_init(const peripheral_t *);
+void BCM2711_init(const soc_data_t *);

@@ -3,6 +3,7 @@
 #include "../../general/include/config.h"
 #include "include/gpio.h"
 #include "../../general/include/serial.h"
+#include "include/mailbox.h"
 
 uart_ops_t *uart;
 
@@ -12,7 +13,7 @@ void mu_set(volatile bcm2835_mu_regs_t *mu_regs, bcm2835_aux_regs_t *aux_regs, u
     mu_regs->MU_LCR = 3;             // 8-bit mode, DLAB=0 (FIFO's used)
     mu_regs->MU_MCR = 0;             // RTS disabled
     mu_regs->MU_IIR = 6;             // '0110' reset receive and transmit FIFO pointers, does not clear FIFO's !!!
-    mu_regs->MU_BAUD = (((board.core_freq_mhz * 1000000) + (4 * baudrate)) / (8 * baudrate)) - 1;
+    mu_regs->MU_BAUD = (((board.clock_rates[CORE_id]) + (4 * baudrate)) / (8 * baudrate)) - 1;
     // Set GPIO 14 and 15 to ALT5 (Mini UART)
     gpio->init_pin(14, GPIO_ALT5, PULL_NONE);
     gpio->init_pin(15, GPIO_ALT5, PULL_NONE);

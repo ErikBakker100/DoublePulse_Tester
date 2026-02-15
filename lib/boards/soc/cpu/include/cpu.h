@@ -3,27 +3,30 @@
 #include "../architecture/include/architectures.h"
 #include "../../../../general/include/config.h"
 
+typedef enum {
+    BCM2835,
+    BCM2836,
+    BCM2837,
+    BCM2711,
+    BCM2712,
+    BCM2837B0,
+    RP3A0,
+    UNKNOWN
+}soc_list_t;
+
 typedef struct {
     uint8_t implementer;
     const char* name;
 } implementer_t;
 extern implementer_t implementer;
 
-static const implementer_t unknown_implementer = {
-    .implementer= 0xFF,
-    .name       = "Unknown implementer"
-};
-
 typedef struct {
     uint16_t        partnum;                // Bits[15:4]
     const char     *name;
+    soc_list_t soc;
+    uintptr_t mmio_base;
 } partnum_t;
 extern partnum_t partnum;
-
-static const partnum_t unknown_cpu = {
-    .partnum = 0x000,
-    .name    = "Unknown CPU"
-};
 
 typedef struct {
     const implementer_t *implementer;       // bits [31:24]
@@ -34,8 +37,6 @@ typedef struct {
 extern cpu_data_t cpu;
 
 void cpu_init(void);
-void cpu_info(void);
-
 void clearBss(void);
 void cpu_dsb(void);
 void cpu_isb(void);

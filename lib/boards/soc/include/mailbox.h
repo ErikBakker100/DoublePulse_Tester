@@ -27,6 +27,7 @@ void get_mac_address(uint8_t* mac);
 uint64_t get_board_serial();
 void get_arm_memory(uint32_t *base, uint32_t *size);
 void get_gpu_memory(uint32_t *base, uint32_t *size);
+uint32_t get_clock_rate(clock_id_t id);
 void get_clock_rates(uint32_t *id);
 void get_clock_rates_measured(uint32_t *id);
 void get_max_clock_rates(uint32_t *id);

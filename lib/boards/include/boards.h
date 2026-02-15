@@ -70,59 +70,10 @@ d041a0      CM5 Lite        1.0             8 GB            Cortex-A76 (Armv8-A)
 e041a0      CM5 Lite        1.0             16 GB           Cortex-A76 (Armv8-A)0xD0B       BCM2712                 2.00        Depends on carrier board                    4       (Mfg by Sony)
 */
 
-#define BOARD_LIST(X)                \
-    /* Name         ID      SoC */   \
-    X(RPIA,        0x00,    BCM2835,    "Raspberry Pi Model A") \
-    X(RPIB,        0x01,    BCM2835,    "Raspberry Pi Model B") \
-    X(RPIA_PLUS,   0x02,    BCM2835,    "Raspberry Pi Model A+") \
-    X(RPIB_PLUS,   0x03,    BCM2835,    "Raspberry Pi Model B+") \
-    X(RPI2B,       0x04,    BCM2836,    "Raspberry Pi 2B") \
-    X(RPIALPHA,    0x05,    BCM2835,    "Raspberry Pi Alpha") \
-    X(RPICM1,      0x06,    BCM2835,    "Raspberry Pi Compute Module 1") \
-    X(RPI3B_V11,   0x08,    BCM2837,    "Raspberry Pi 3B v1.1") \
-    X(RPIZ1,       0x09,    BCM2835,    "Raspberry Pi Zero v1.1") \
-    X(RPICM3,      0x0A,    BCM2837,    "Raspberry Pi Compute Module 3") \
-    X(RPIZ1W,      0x0C,    BCM2835,    "Raspberry Pi Zero W v1.1") \
-    X(RPI3B_PLUS,  0x0D,    BCM2837B0,  "Raspberry Pi 3B+") \
-    X(RPI3A_PLUS,  0x0E,    BCM2837B0,  "Raspberry Pi 3A+") \
-    X(RPICM3_PLUS, 0x10,    BCM2837B0,  "Raspberry Pi Compute Module 3+") \
-    X(RPI4B,       0x11,    BCM2711,    "Raspberry Pi 4B") \
-    X(RPIZ2W,      0x12,    RP3A0,      "Raspberry Pi Zero 2 W v1.1") \
-    X(RPI400,      0x13,    BCM2711,    "Raspberry Pi 400") \
-    X(RPICM4,      0x14,    BCM2711,    "Raspberry Pi Compute Module 4") \
-    X(RPICM4S,     0x15,    BCM2711,    "Raspberry Pi Compute Module 4S") \
-    X(RPI5,        0x17,    BCM2712,    "Raspberry Pi 5") \
-    X(RPICM5,      0x18,    BCM2712,    "Raspberry Pi Compute Module 5") \
-    X(RPI500,      0x19,    BCM2712,    "Raspberry Pi 500") \
-    X(RPICM5_LITE, 0x1A,    BCM2712,    "Raspberry Pi Compute Module 5 Lite") \
-    X(RPI0,        0x1B,    UNKNOWN,    "Unknown board")
-// Note: RPI2B is the only board with BCM2836, but it is not guaranteed that all revisions of RPI2B have BCM2836, so we will read the SoC from the board during initialization
-typedef enum {
-    #define X(name, id, soc, description) name = id,
-    BOARD_LIST(X)
-    #undef X
-} board_name_t;
-
-// used to count the actual number in the list
-typedef enum {
-    #define X(name, id, soc, description) name##_INDEX,
-    BOARD_LIST(X)
-    #undef X
-    BOARD_COUNT
-} board_index_t;
-
-typedef struct {
-    char *name;
-    uint8_t id;                             // used to find soc during board_init via mailbox_vc
-    soc_list_t soc;
-    const char *description;
-} board_name_list_t;
-extern board_name_list_t boards[];
-
 // Clock IDs, used to index clock rate arrays in board_t
 typedef enum {
-reserved_id,       // 0x0 
-EMMC_id,           // 0x1 
+INVALID_id = 0,    // 0x0 
+EMMC_id    = 1,    // 0x1 
 UART_id,           // 0x2
 ARM_id,            // 0x3
 CORE_id,           // 0x4
@@ -141,8 +92,7 @@ CLOCK_SIZE          // 0xf
 } clock_id_t;
 
 typedef struct {
-    board_name_list_t* used;
-    soc_list_t read;                        // SOC in use, read from board. May be different than set by user 
+    const char* description;
     uint8_t  rev_scheme;                    // 0 = oud, 1 = nieuw (Bit 23)
     const char *memory_size;                // Hoeveelheid RAM (Bits 20-22)
     const char *manufacturer;               // Fabrikant (Bits 16-19)
@@ -151,8 +101,6 @@ typedef struct {
     uint8_t  revision_num;                  // Versienummer van de PCB (Bits 0-3)
     uint32_t revision_raw_value;            // De originele hex-waarde
     int32_t baudrate;                       // set via config.h
-    int16_t core_freq_mhz;                  // set via CMakelists.txt
-    int16_t arm_freq_mhz;                   // set via CMakelists.txt
     uint32_t firmware_date;                 // set during board_init
     uint64_t serial;                        // set during board_init
     uint8_t mac_address[6];                 // set during board_init
@@ -169,5 +117,5 @@ typedef struct {
 
 extern board_data_t board;
 
-bool board_init(board_data_t *board, const char* name);
-void board_info(board_data_t *board);
+bool board_init(board_data_t *board);
+

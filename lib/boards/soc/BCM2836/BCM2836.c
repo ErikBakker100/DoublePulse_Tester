@@ -52,7 +52,7 @@ volatile bcm2836_core_mailbox_ctrl_regs_t *CORE_MB_CTRL_2836;
 volatile bcm2836_isr_regs_t *ISR_2836;
 volatile bcm2836_al_mailboxes_regs_t *MAILBOX_2836;    // ARM Local Mailboxes
 
-void BCM2836_init(const peripheral_t *mmio) {
+void BCM2836_init(const soc_data_t *mmio) {
     SYS_TMR_2836 = (bcm2835_sys_timer_regs_t *)(mmio->base + 0x3000);
     DMA00_2836 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7000);
     DMA01_2836 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7100);

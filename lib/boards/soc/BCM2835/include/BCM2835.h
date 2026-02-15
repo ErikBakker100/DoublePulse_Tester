@@ -456,4 +456,4 @@ typedef struct {
 }  bcm2835_usb_regs_t;
 extern volatile bcm2835_usb_regs_t *USB_2835;
 // Initializes the BCM2836 peripherals base address pointers
-void BCM2835_init(const peripheral_t *);
+void BCM2835_init(const soc_data_t *);

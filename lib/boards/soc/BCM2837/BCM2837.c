@@ -51,7 +51,7 @@ volatile bcm2836_core_tmr_ctrl_regs_t *CORE_TMR_CTRL_2837;
 volatile bcm2836_core_mailbox_ctrl_regs_t *CORE_MB_CTRL_2837;
 volatile bcm2836_isr_regs_t *ISR_2837;
 
-void BCM2837_init(const peripheral_t *mmio) {
+void BCM2837_init(const soc_data_t *mmio) {
     SYS_TMR_2837 = (bcm2835_sys_timer_regs_t *)(mmio->base + 0x3000);
     DMA00_2837 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7000);
     DMA01_2837 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7100);

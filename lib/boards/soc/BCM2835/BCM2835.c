@@ -43,7 +43,7 @@ volatile bcm2835_emmc_regs_t *EMMC_2835;
 volatile bcm2835_i2c_regs_t *I2C1_2835;
 volatile bcm2835_usb_regs_t *USB_2835;
 
-void BCM2835_init(const peripheral_t *mmio) {
+void BCM2835_init(const soc_data_t *mmio) {
     SYS_TMR_2835 = (bcm2835_sys_timer_regs_t *)(mmio->base + 0x3000);
     DMA00_2835 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7000);
     DMA01_2835 = (volatile bcm2835_dma_ctrl_regs_t *)(mmio->base + 0x7100);

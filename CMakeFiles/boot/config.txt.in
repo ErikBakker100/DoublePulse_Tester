@@ -2,5 +2,6 @@ arm_64bit=@ARM_64BIT@
 kernel=@IMAGEFILE@
 @JTAG_ENABLE@
 dtoverlay=disable-bt
-core_freq=@CORE_FREQ@
-arm_freq=@ARM_FREQ@
+#core_freq=@CORE_FREQ@
+#arm_freq=@ARM_FREQ@
+force_turbo=1

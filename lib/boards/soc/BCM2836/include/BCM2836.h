@@ -269,4 +269,4 @@ typedef struct {
 extern volatile bcm2836_al_mailboxes_regs_t *MAILBOX_2836;
 
 // Initializes the BCM2836 peripherals base address pointers
-void BCM2836_init(const peripheral_t *);
+void BCM2836_init(const soc_data_t  *);

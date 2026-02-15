@@ -196,4 +196,4 @@ extern volatile bcm2836_core_mailbox_ctrl_regs_t *CORE_MB_CTRL_2837;
 extern volatile bcm2836_isr_regs_t *ISR_2837;
 
 // Initializes the BCM2837 address pointers
-void BCM2837_init(const peripheral_t *);
+void BCM2837_init(const soc_data_t *);

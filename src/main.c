@@ -26,9 +26,10 @@ static char jsonString[CHAR_BUFFER] = {0};  // Uart buffer for receiving JSON st
 
 
 void core_main_0(uint32_t arg0, uint32_t arg1) {
-  if (!board_init(&board, RPI_DEFINE)) return; // check board and set pointers, if false we can not continue.
-  board_info(&board);
-  uart->set(BAUDRATE);                      // Initialize UART for BAUDRATE
+  cpu_init();                               // get CPU information, and sest base addresses for peripherals
+  date_time_t date_time;
+  if (!board_init(&board)) return;          // read board information, if false we can not continue.
+  uart->set(BAUDRATE);
   mu_puts("> ************** Dual Pulse Generator **************\r\n");
   mu_puts("> Usage: Send JSON string, for e.g {\"pulseWidth1\": 70, \"interPulseDelay\": 30, \"pulseWidth2\": 50, \"pulseInterval\": 500}.\r\n");
   mu_puts("> Using GPIO: ");
@@ -39,18 +40,11 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts(">      70       ______ 30 _________     50     ______ 500_______\r\n");
   mu_puts("> ******************* Used Board *******************\r\n");
   mu_puts("\r\n> Model:                   ");
-  mu_puts(board.used->name);
+  mu_puts(board.description);
   mu_puts(", ");
   mu_puts(board.memory_size);
   mu_puts(", made by: ");
   mu_puts(board.manufacturer);
-  mu_puts(", ");
-  for (uint8_t i = 0; i < BOARD_COUNT; i++) {
-    if (boards[i].id == board.revision_model_type) {
-      mu_puts(boards[i].description);
-      break;
-    }
-  }
   mu_puts(", ");
   if (board.rev_scheme == 0) {
     mu_puts("old revision scheme");
@@ -59,31 +53,26 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   } else {
     mu_puts("unknown revision scheme");
   }
-  mu_puts("\r\n> SOC set by user:         ");
-  mu_puts(soc.name);
-  mu_puts(", read from board: ");
-  mu_puts((char*)soc_name_table[board.read]);
-  mu_puts("\r\n> Using CPU:               ");
-  mu_puts(soc.cpu->architecture->name);
+  mu_puts("\r\n> SOC:                     ");
+  mu_puts(cpu.part->name);
+  mu_puts(" CPU: ");
+  mu_puts(cpu.architecture->name);
   mu_puts(", implementer: ");
-  mu_puts(soc.cpu->implementer->name);
+  mu_puts(cpu.implementer->name);
   mu_puts(", ");
-  mu_put_hex16(soc.cpu->part->partnum, true);
-  mu_puts(", ");
-  mu_puts(soc.cpu->part->name);
+  mu_put_hex16(cpu.part->partnum, true);
   mu_puts(", revision: ");
-  mu_puts(soc.cpu->rNpM);
+  mu_puts(cpu.rNpM);
   mu_puts("\r\n> Using Addresses:         ");
-  mu_put_hex32(soc.mmio->base, true);
+  mu_put_hex32(cpu.part->mmio_base, true);
   mu_puts(", ");
-  mu_put_hex32(soc.mmio->base_end, true);
+  mu_put_hex32(soc.base_end, true);
   mu_puts(", ");
-  mu_put_hex32(soc.mmio->gpu_io_base, true);
+  mu_put_hex32(soc.gpu_io_base, true);
   mu_puts(", ");
-  mu_put_hex32(soc.mmio->gpu_mem_base, true);
+  mu_put_hex32(soc.gpu_mem_base, true);
   mu_puts(", ");
-  mu_put_hex32(soc.mmio->local_periph_base, true);
-  board_info(&board);
+  mu_put_hex32(soc.local_periph_base, true);
   format_firmware_date_time(board.firmware_date, &date_time);
   mu_puts("\r\n> VC firmware date:        ");
   mu_put_uint(date_time.day);
@@ -97,7 +86,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_put_uint(date_time.minute);
   mu_puts(":");
   mu_put_uint(date_time.second);
-  mu_puts(", raw board id ");
+  mu_puts(", board id ");
   mu_put_hex32(board.revision_raw_value, true);
    mu_puts("\r\n> Serial nr.               ");
   mu_put_hex32(board.serial, true);
