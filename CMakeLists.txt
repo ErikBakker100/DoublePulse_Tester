@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 
-
 # ----------------------
-# Copy either kernel8.img or kernel.img to the SD-card output directory, depending on the selected ARCH
-# kernel.img	ARMv6 (32-bit)	Pi 1, Zero, Zero W
-# kernel7.img	ARMv7 (32-bit)	Pi 2, Pi 3
-# kernel7l.img	ARMv7+LPAE (32-bit)	Pi 4, Pi 400 (De 'l' staat voor Large Physical Address Extension)
-# kernel8.img	ARMv8 (64-bit)	Pi 3, Zero 2 W, Pi 4, Pi 5
+# kernel.img	ARMv6 (32-bit)	Pi 1 (A, B, B+), Zero, Zero W, Compute Model 1 = arm1176jzf-s
+# kernel7.img	ARMv7 (32-bit)	Pi 2 (v1.1) = cortex-a7
+# kernel7l.img	ARMv7+LPAE (32-bit)	Pi 4, Pi 400 (De 'l' staat voor Large Physical Address Extension) = cortex-a72
+# kernel7.img	ARMv8 (32-bit)	Zero 2 W, Pi 3  = cortex-a53
+# kernel8.img	ARMv8 (64-bit)	Zero 2 W, Pi 3  = cortex-a53
+# kernel8.img	ARMv8 (64-bit) Pi 4 = cortex-a72
+# kernel8.img	ARMv8 (32-bit and 64-bit) Pi 5 = cortex-a76
 # ----------------------
 
 set(CMAKE_SYSTEM_NAME Generic)
@@ -25,6 +26,10 @@ set(DUALCORE "on" CACHE STRING "Dual core support")
 set_property(CACHE DUALCORE PROPERTY STRINGS on off)
 validate_choice(DUALCORE on off)
 
+set(BOARD "RPIZ2W" CACHE STRING "Raspberry Pi model")
+set_property(CACHE BOARD PROPERTY STRINGS RPIA RPIB RPIA_PLUS RPIB_PLUS RPI2B10 RPI2B11 RPI2B12 RPIALPHA RPICM1 RPI3B11 RPI3B12 RPI3B13 RPIZ1 RPICM3 RPIZ1W RPI3A_PLUS RPICM3_PLUS RPI4B RPI3B_PLUS RPI400 RPICM4 RPIZ2W RPI5 RPICM5 RPI500 RPICM5_LITE)
+validate_choice(BOARD RPIA RPIB RPIA_PLUS RPIB_PLUS RPI2B10 RPI2B11 RPI2B12 RPIALPHA RPICM1 RPI3B11 RPI3B12 RPI3B13 RPIZ1 RPICM3 RPIZ1W RPI3A_PLUS RPICM3_PLUS RPI4B RPI3B_PLUS RPI400 RPICM4 RPIZ2W RPI5 RPICM5 RPI500 RPICM5_LITE)
+
 print_choice(ARCH
     arm32 "arm32 build"
     arm64 "arm64 build"
@@ -35,6 +40,79 @@ print_choice(DUALCORE
     off "Single-core build"
 )
 
+print_choice(BOARD
+    RPIA            "Building for Raspberry Pi 1A"
+    RPIB            "Building for Raspberry Pi 1B"
+    RPIA_PLUS       "Building for Raspberry Pi 1A+"
+    RPIB_PLUS       "Building for Raspberry Pi 1B+"
+    RPI2B           "Building for Raspberry Pi 2B"
+    RPIALPHA        "Building for Raspberry Pi Alpha"
+    RPICM1          "Building for Raspberry Pi Compute Module 1"
+    RPI3B_V11       "Building for Raspberry Pi 3B"
+    RPIZ1           "Building for Raspberry Pi Zero 1"
+    RPICM3          "Building for Raspberry Pi Compute Module 3"
+    RPIZ1W          "Building for Raspberry Pi Zero 1W"
+    RPI3B           "Building for Raspberry Pi 3B"
+    RPI3A_PLUS      "Building for Raspberry Pi 3A+"
+    RPICM3_PLUS     "Building for Raspberry Pi Compute Module 3+"
+    RPI4B           "Building for Raspberry Pi 4B"
+    RPI3B_PLUS      "Building for Raspberry Pi 3B+"
+    RPI400          "Building for Raspberry Pi 400"
+    RPICM4          "Building for Raspberry Pi Compute Module 4"
+    RPIZ2W          "Building for Raspberry Pi Zero 2(W)"
+    RPI5            "Building for Raspberry Pi 5"
+    RPICM5          "Building for Raspberry Pi Compute Module 5"
+    RPI500          "Building for Raspberry Pi 500"
+    RPICM5_LITE     "Building for Raspberry Pi Compute Module 5 Lite"
+)
+
+# ----------------------
+# Validating user choices
+# ----------------------
+if(BOARD STREQUAL "RPIA" OR BOARD STREQUAL "RPIB" OR BOARD STREQUAL "RPIA_PLUS" OR BOARD STREQUAL "RPIB_PLUS" OR BOARD STREQUAL "RPIALPHA" OR BOARD STREQUAL "RPICM1" OR BOARD STREQUAL "RPIZ1" OR BOARD STREQUAL "RPIZ1W")
+    if(ARCH STREQUAL "arm64")
+        message(FATAL_ERROR "Model does not support arm64")
+    endif()
+    if(DUALCORE STREQUAL "on")
+        message(FATAL_ERROR "Model has one core only")
+    endif()
+endif()
+
+# ----------------------
+# Raspberry Pi CPU map
+# ----------------------
+if(BOARD STREQUAL "RPIA" OR BOARD STREQUAL "RPIB" OR BOARD STREQUAL "RPIA_PLUS" OR BOARD STREQUAL "RPIB_PLUS" OR BOARD STREQUAL "RPIALPHA" OR BOARD STREQUAL "RPICM1" OR BOARD STREQUAL "RPIZ1" OR BOARD STREQUAL "RPIZ1W")
+    set(RPI_CPU         arm1176jzf-s)
+    set(ARM_BITS        arm32)
+    set(OUTPUT          18)
+    set(IMAGEFILE       kernel.img)
+    set(DUALCORE        off)
+elseif(BOARD STREQUAL "RPI2B10" OR BOARD STREQUAL "RPI2B11" OR BOARD STREQUAL "RPI3B11")
+    set(RPI_CPU         cortex-a7)
+    set(ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(OUTPUT          18)
+    set(IMAGEFILE       kernel7.img)
+elseif(BOARD STREQUAL "RPI2B12" OR BOARD STREQUAL "RPI3B12" OR BOARD STREQUAL "RPI3B13" OR BOARD STREQUAL "RPICM3" OR BOARD STREQUAL "RPICM3_PLUS" OR BOARD STREQUAL "RPI3A_PLUS" OR BOARD STREQUAL "RPI3B_PLUS" OR BOARD STREQUAL "RPIZ2W")
+    set(RPI_CPU         cortex-a53)
+    set(ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(OUTPUT          18)
+    if(ARCH STREQUAL "arm64")
+         set(IMAGEFILE  kernel8.img)
+    else()
+         set(IMAGEFILE  kernel7.img)
+    endif()
+elseif(BOARD STREQUAL "RPI4B" OR BOARD STREQUAL "RPI400" OR BOARD STREQUAL "RPICM4" OR BOARD STREQUAL "RPICM4")    
+    set(RPI_CPU         cortex-a72)
+    set(ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(OUTPUT          18)
+    set(IMAGEFILE       kernel8.img)
+elseif(BOARD STREQUAL "RPI5" OR BOARD STREQUAL "RPICM5" OR BOARD STREQUAL "RPI500" OR BOARD STREQUAL "RPICM5_LITE")
+    set(RPI_CPU         cortex-a76)
+    set(ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(OUTPUT          18)
+    set(IMAGEFILE       kernel8.img)
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING
         "Build type (Debug, Release)" FORCE)
@@ -44,15 +122,13 @@ endif()
 # Auto select toolchains and Startup files for selected ARCH
 # ----------------------
 if(ARCH STREQUAL "arm32")
-    set(CMAKE_C_COMPILER arm-none-eabi-gcc)
-    set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
+    set(CMAKE_C_COMPILER arm-none-eabi-gcc CACHE PATH "C compiler" FORCE)
+    set(CMAKE_ASM_COMPILER arm-none-eabi-gcc CACHE PATH "ASM compiler" FORCE)
     set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start32.s)
 elseif(ARCH STREQUAL "arm64")
-    set(CMAKE_C_COMPILER aarch64-none-elf-gcc)
-    set(CMAKE_ASM_COMPILER aarch64-none-elf-gcc)
+    set(CMAKE_C_COMPILER aarch64-none-elf-gcc CACHE PATH "C compiler" FORCE)
+    set(CMAKE_ASM_COMPILER aarch64-none-elf-gcc CACHE PATH "ASM compiler" FORCE)
     set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start64.s)
-else()
-    message(FATAL_ERROR "-DARCH= has to be arm32 or arm64")
 endif()
 
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
@@ -102,14 +178,11 @@ set(CMAKE_ASM_FLAGS_RELEASE "" CACHE STRING "" FORCE)
 if(ARCH STREQUAL "arm64") 
     set(LINKER_LOAD_ADDR 0x80000)
     set(ARM_64BIT 1)
-    set(IMAGEFILE kernel8.img)
     # Extra namen waar de firmware naar zoekt op 64-bit systemen
     set(ALT_IMAGEFILES kernel8-71.img kernel8-2712.img)
 else() # 32-bit
     set(LINKER_LOAD_ADDR 0x8000)
     set(ARM_64BIT 0)
-    # Voor 32-bit build genereren we alle varianten
-    set(IMAGEFILE kernel.img)
     set(ALT_IMAGEFILES kernel7.img kernel7l.img)
 endif()
 
@@ -182,14 +255,14 @@ endif()
 # Compiler flags
 set(ARCH_FLAGS "")
 
-if(RPI_ARM_BITS STREQUAL "arm32")
+if(ARM_BITS STREQUAL "arm32")
     set(ARCH_FLAGS
         -mcpu=${RPI_CPU}
         -marm
     )
-elseif(RPI_ARM_BITS STREQUAL "arm64")
+elseif(ARM_BITS STREQUAL "arm64")
     set(ARCH_FLAGS
-        -march=${RPI_ARCH}
+        -mcpu=${RPI_CPU}
     )
 endif()
 
@@ -222,14 +295,6 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} -O binary
             $<TARGET_FILE:${PROJECT_NAME}>
             ${CMAKE_BINARY_DIR}/bin/${IMAGEFILE}
-    # Maak kopieën voor de alternatieve namen (voor automatische detectie firmware)
-    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR}/bin/ 
-            ${CMAKE_COMMAND} -E create_symlink ${IMAGEFILE} kernel7.img
-    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR}/bin/ 
-            ${CMAKE_COMMAND} -E create_symlink ${IMAGEFILE} kernel7l.img
-    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR}/bin/ 
-            ${CMAKE_COMMAND} -E create_symlink ${IMAGEFILE} kernel8.img            
-
     COMMAND ${CMAKE_OBJCOPY} --srec-forceS3
             $<TARGET_FILE:${PROJECT_NAME}>
             ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.srec
@@ -266,12 +331,7 @@ add_custom_target(copy_boot_files ALL
     # maak hem opnieuw aan
     COMMAND ${CMAKE_COMMAND} -E make_directory ${SDCARD_DIR}
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${BOOTFILES_DIR} ${SDCARD_DIR}
-
 # Kopieer ALLE gegenereerde kernel bestanden naar de SD kaart
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/kernel.img ${SDCARD_DIR}/ 2>NUL || ${CMAKE_COMMAND} -E echo ""
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/kernel7.img ${SDCARD_DIR}/ 2>NUL || ${CMAKE_COMMAND} -E echo ""
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/kernel7l.img ${SDCARD_DIR}/ 2>NUL || ${CMAKE_COMMAND} -E echo ""
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/kernel8.img ${SDCARD_DIR}/ 2>NUL || ${CMAKE_COMMAND} -E echo ""
-    
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/${IMAGEFILE} ${SDCARD_DIR}/
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/config.txt ${SDCARD_DIR}
 )

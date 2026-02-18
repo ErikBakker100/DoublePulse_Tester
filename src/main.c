@@ -126,7 +126,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   irq->init_core0();                         // Initialize IRQs for core0
 
   while (1) {
-/*    if (read_json(jsonString, CHAR_BUFFER, (100000))) { // If a character is in the UART buffer, try to get the whole string, or timeout (at 115200 one byte is ~87usec).
+    if (read_json(jsonString, CHAR_BUFFER, (100000))) { // If a character is in the UART buffer, try to get the whole string, or timeout (at 115200 one byte is ~87usec).
       mu_puts("> Received: ");
       mu_puts(jsonString);                  // Print the received JSON string
       mu_puts("\r\n");
@@ -202,6 +202,6 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
           }
         }
       }
-    } */
+    }
   }
 }

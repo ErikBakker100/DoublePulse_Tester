@@ -16,7 +16,7 @@ a02042      2B              1.2             1 GB            Cortex A53 (Armv8)  
 a22042	    2B              1.2	            1 GB	        Cortex A53 (Armv8)  0xC07       BCM2837                 1.20        10/100 Eth                                  4       (Mfg by Embest)
 900061	    CM1             1.0	            512 MB	        ARM1176JZF-S        0xB76       BCM2835                 0.70        Depends on carrier board                    1       (Mfg by Sony)
 a02082	    3B      	    1.2	            1 GB	        Cortex A53 (Armv8)  0xD03       BCM2837                             10/100 Eth, , BT 4.1                        4       (Mfg by Sony) https://developer.arm.com/documentation/ddi0500/latest/
-a22081	    3B	            1.1	            1 GB	        Armv7 quad          0xC07       BCM2836     0.25        1.20        10/100 Eth, 802.11n WiFi, BT 4.1            4       (Mfg by Embest)
+a22081	    3B	            1.1	            1 GB	        Cortex A7 (Armv7)   0xC07       BCM2836     0.25        1.20        10/100 Eth, 802.11n WiFi, BT 4.1            4       (Mfg by Embest)
 a22082	    3B	            1.2	            1 GB	        Cortex A53 (Armv8)  0xD03       BCM2837     0.25        1.20        10/100 Eth, 802.11n WiFi, BT 4.1            4       (Mfg by Embest)
 a22083	    3B	            1.3	            1 GB	        Cortex A53 (Armv8)  0xD03       BCM2837B0               1.20        10/100 Eth, 802.11n WiFi, BT 4.1            4       (Mfg by Embest)
 a52082	    3B	            1.2	            1 GB	        Cortex A53 (Armv8)  0xD03       BCM2837     0.25        1.20        10/100 Eth, 802.11n WiFi, BT 4.1            4       (Mfg by Stadium)
