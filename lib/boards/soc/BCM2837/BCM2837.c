@@ -50,6 +50,7 @@ volatile bcm2836_local_tmr_regs_t *LOC_TMR_2837;
 volatile bcm2836_core_tmr_ctrl_regs_t *CORE_TMR_CTRL_2837;
 volatile bcm2836_core_mailbox_ctrl_regs_t *CORE_MB_CTRL_2837;
 volatile bcm2836_isr_regs_t *ISR_2837;
+volatile bcm2836_al_mailboxes_regs_t *MAILBOX_2837;    // ARM Local Mailboxes
 
 void BCM2837_init(const soc_data_t *mmio) {
     SYS_TMR_2837 = (bcm2835_sys_timer_regs_t *)(mmio->base + 0x3000);
@@ -95,6 +96,7 @@ void BCM2837_init(const soc_data_t *mmio) {
     CORE_TMR_CTRL_2837 = (volatile bcm2836_core_tmr_ctrl_regs_t *)(mmio->local_periph_base + 0x40);
     CORE_MB_CTRL_2837 = (volatile bcm2836_core_mailbox_ctrl_regs_t *)(mmio->local_periph_base + 0x50);
     ISR_2837 = (volatile bcm2836_isr_regs_t *)(mmio->local_periph_base + 0x60);
+    MAILBOX_2837 = (volatile bcm2836_al_mailboxes_regs_t *)(mmio->local_periph_base + 0x80);
 
     SYS_TMR_2837->CS = 0; // Clear timer control/status register
     SYS_TMR_2837->C[0] = 0;

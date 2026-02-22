@@ -4,6 +4,8 @@
 #include "../../include/mailbox.h"
 #include "../../cpu/include/cpu.h"
 #include "../../../../general/include/serial.h"
+#include "../../../../general/include/config.h" // for BLINK_TIMER
+#include "../../../../multi_core/include/core1.h"
 
 void bcm2836_irq_disable(void);
 void bcm2836_irq_enable(void);
@@ -50,7 +52,7 @@ void bcm2836_irq_init_core1(void) {
     // Disable interrupts
     bcm2836_irq_disable();
     // Enable mailbox interrupts for this core
-    CORE_MB_CTRL_2836->MAILBOX_CNTRL[1] = (MBOX0_IRQ | MBOX1_IRQ | MBOX2_IRQ | MBOX3_IRQ); // IRQ's voor alle mailboxen van core1 enabelen.
+    CORE_MB_CTRL_2836->MAILBOX_CNTRL[1] = (MBOX0_IRQ); // IRQ voor mailbox 0 van core1 enabelen.
     // ensure writes reach device before we enable interrupts
     cpu_dsb();
     cpu_isb();
@@ -60,20 +62,7 @@ void bcm2836_irq_init_core1(void) {
 
 void bcm2836_irq_handler_core1(void) {
     if(ISR_2836->IRQ_SOURCE[1] & INT_SRC_MBOX0) {
-        mailbox->read(0, 1);              // Read mailbox 0 for core1
-        mailbox->write(0, 1, 0xFFFFFFFF); // Erase the bits read, and clear the IRQ
-    }
-    if(ISR_2836->IRQ_SOURCE[1] & INT_SRC_MBOX1) {
-        mailbox->read(1, 1);              // Read mailbox 1 for core1
-        mailbox->write(1, 1, 0xFFFFFFFF); // Erase the bits read, and clear the IRQ
-    }
-    if(ISR_2836->IRQ_SOURCE[1] & INT_SRC_MBOX2) {
-        mailbox->read(2, 1);              // Read mailbox 2 for core1
-        mailbox->write(2, 1, 0xFFFFFFFF); // Erase the bits read, and clear the IRQ
-    }
-    if(ISR_2836->IRQ_SOURCE[1] & INT_SRC_MBOX3) {
-        mailbox->read(3, 1);              // Read mailbox 3 for core1
-        mailbox->write(3, 1, 0xFFFFFFFF); // Erase the bits read, and clear the IRQ
+        mailbox0_core1(mailbox->read(0, 1));// Read mailbox 0 for core1
     }
 }
 

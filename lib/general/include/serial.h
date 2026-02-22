@@ -7,10 +7,10 @@
 #define RX_BUF_SIZE 256                     // Size of the RX buffer for UART reception
 
 /* RX ringbuffer */
-typedef struct {
+typedef struct __attribute__((packed, aligned(4))){
     volatile uint16_t head;
     volatile uint16_t tail;
-    char buffer[RX_BUF_SIZE];
+    uint8_t buffer[RX_BUF_SIZE];
 } rx_buf_t;
 
 void mu_puts(const char *s);
@@ -27,4 +27,4 @@ void mu_put_bits32(const uint32_t value);
 void mu_put_bits64(const uint64_t value);
 void rx_put(const uint8_t c);
 bool rx_available(void);
-int8_t rx_get(void);
+int16_t rx_get(void);

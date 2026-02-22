@@ -6,10 +6,10 @@
 #include "../boards/soc/include/irq.h"
 #include "../boards/soc/cpu/include/cpu.h"
 
-unsigned long delay1 = DEFAULT_PULSE_WIDTH1; // holds Pulse Width1 delay
-unsigned long delay2 = DEFAULT_INTER_PULSE_DELAY; // holds Inter Pulse width delay
-unsigned long delay3 = DEFAULT_PULSE_WIDTH2; // holds Pulse Width2 delay
-unsigned long delay4 = DEFAULT_PULSE_INTERVAL; // holds Pulse Interval delay
+volatile uint32_t delay1 = DEFAULT_PULSE_WIDTH1; // holds Pulse Width1 delay
+volatile uint32_t delay2 = DEFAULT_INTER_PULSE_DELAY; // holds Inter Pulse width delay
+volatile uint32_t delay3 = DEFAULT_PULSE_WIDTH2; // holds Pulse Width2 delay
+volatile uint32_t delay4 = DEFAULT_PULSE_INTERVAL; // holds Pulse Interval delay
 
 /*
 // Start core1
@@ -20,27 +20,33 @@ unsigned long delay4 = DEFAULT_PULSE_INTERVAL; // holds Pulse Interval delay
 // 'ishst' specificeert dat de DSB-operatie betrekking heeft op alle inner-shareable geheugenlocaties en dat het effect van de DSB-operatie zichtbaar moet zijn
 // voor alle inner-shareable caches en buffers voordat de instructie verder gaat.
 */
-
+#ifdef DUALCORE
 void start_core1(void) {
+
     *core_boot(1) = (core_reg_t)(uintptr_t)&core_entry_1;
+
     cpu_dsb();
     cpu_sev();
+}
+#endif
+
+void doublepulse_generator(uint32_t d1, uint32_t d2, uint32_t d3, uint32_t d4) {
+    gpio->set(OUTPUT_PIN);
+    DELAY(d1); // PulseWidth1
+    gpio->clear(OUTPUT_PIN);
+    DELAY(d2); // interPulseDelay
+    gpio->set(OUTPUT_PIN);
+    DELAY(d3); // PulseWith2
+    gpio->clear(OUTPUT_PIN);
+    DELAY(d4); // Pulseinterval
 }
 
 // Entry point for core1
 void core_main_1() {
-    gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin
     irq->init_core1();                      // Initialize IRQs for core1
     while (1) {
-        gpio->set(OUTPUT_PIN);
-        DELAY(delay1); // PulseWidth1
-        gpio->clear(OUTPUT_PIN);
-        DELAY(delay2); // interPulseDelay
-        gpio->set(OUTPUT_PIN);
-        DELAY(delay3); // PulseWith2
-        gpio->clear(OUTPUT_PIN);
-        DELAY(delay4); // Pulseinterval
-   }
+        doublepulse_generator(delay1, delay2, delay3, delay4);
+}
 /*  Alternatief voor instabiele DELAY() functie, gebruik PWM in ns modus
     pwm_ns_init();
     irq_init_core1();
@@ -89,17 +95,10 @@ void core_main_1() {
 }
 
 void mailbox0_core1(uint32_t delay) {
-    delay1 = delay;
-}
-
-void mailbox1_core1(uint32_t delay) {
-    delay2 = delay;
-}
-
-void mailbox2_core1(uint32_t delay) {
-    delay3 = delay;
-}
-
-void mailbox3_core1(uint32_t delay) {
-    delay4 = delay;
+    dmb();
+    delay1 = Intervals[0];
+    delay2 = Intervals[1];
+    delay3 = Intervals[2];
+    delay4 = Intervals[3];
+    dmb();
 }

@@ -10,7 +10,7 @@
 #define DEFAULT_INTER_PULSE_DELAY 30        // in microseconds
 #define DEFAULT_PULSE_WIDTH2 50             // in microseconds
 #define DEFAULT_PULSE_INTERVAL 500          // in microseconds
-extern uint32_t Intervals[4]; // Array to hold the intervals
+extern volatile uint32_t Intervals[4]; // Array to hold the intervals
 
 #define CPUID_REG (*(volatile uint32_t *)0xE000ED00)
 

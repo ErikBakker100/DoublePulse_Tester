@@ -1,14 +1,29 @@
 #include "../include/BCM2837.h"
 #include "include/mailbox_BCM2837.h"
 #include "../../include/mailbox.h"
+#include "../../../../general/include/stdlib.h"
+
+static inline uint8_t validate_mailbox(uint8_t mailbox, uint8_t core) {
+    if (mailbox > 3) mailbox = 3;
+    if (core > 3) core = 3;
+    return (core * 4) + mailbox;
+}
 
 uint32_t bcm2837_mailbox_read(uint8_t mailbox, uint8_t core) {
-    // Mailbox Read
-    return 0;
+    uint8_t nr = validate_mailbox(mailbox, core);
+    dmb();
+    uint32_t val = MAILBOX_2837->MBOX_CLR[nr];
+    MAILBOX_2837->MBOX_CLR[nr] = 0xFFFFFFFF;              // Clear all bits
+    dmb();
+    return val;
 }
 
 void bcm2837_mailbox_write(uint8_t mailbox, uint8_t core, uint32_t val) {
-    // Mailbox Write
+    uint8_t nr = validate_mailbox(mailbox, core);
+    MAILBOX_2837->MBOX_CLR[nr] = 0xFFFFFFFF;              // Clear mailbox, writing a '1' clears that bit.
+    dmb();
+    MAILBOX_2837->MBOX_SET[nr] = val;
+    dmb();
 }
 
 const mailboxes_ops_t bcm2837_mailbox = {
@@ -22,17 +37,6 @@ void bcm2837_mailbox_init(void) {
 // --------------------------------------------------------------
 // Video Core Mailbox functions
 // --------------------------------------------------------------
-
-/* Data Memory Barrier */
-static inline void dmb(void) {
-    #if defined(__arm__) && (__ARM_ARCH <= 6)
-        // ARMv6 (Pi 1 / Zero)
-        __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 5" : : "r" (0) : "memory");
-    #else
-        // ARMv7 en ARMv8 (Pi 2, 3, 4, 5 in zowel 32-bit als 64-bit)
-        __asm__ __volatile__ ("dmb sy" : : : "memory");
-    #endif
-}
 
 //
 // Write data to the videocore mailbox.

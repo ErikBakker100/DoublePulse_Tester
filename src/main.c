@@ -23,8 +23,6 @@
 static char jsonString[CHAR_BUFFER] = {0};  // Uart buffer for receiving JSON string
 // Core0 is reponsible for updating parameters and communicating with the outside
 // Core1 is generating the pulses based on the values in 'Intervals[]'
-
-
 void core_main_0(uint32_t arg0, uint32_t arg1) {
   cpu_init();                               // get CPU information, and sest base addresses for peripherals
   date_time_t date_time;
@@ -38,8 +36,8 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts("> _______________                 ______________\r\n");
   mu_puts("> | pulseWidth1 | interPulseDelay | pulseWith2 | pulseInterval |\r\n");
   mu_puts(">      70       ______ 30 _________     50     ______ 500_______\r\n");
-  mu_puts("> ******************* Used Board *******************\r\n");
-  mu_puts("\r\n> Model:                   ");
+  mu_puts(">\r\n ******************* Used Board *******************\r\n");
+  mu_puts("> Model:                   ");
   mu_puts(board.description);
   mu_puts(", ");
   mu_puts(board.memory_size);
@@ -54,14 +52,16 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
     mu_puts("unknown revision scheme");
   }
   mu_puts("\r\n> SOC:                     ");
+  mu_puts(soc.name);
+  mu_puts("\r\n> CPU core:                ");
   mu_puts(cpu.part->name);
-  mu_puts(" CPU: ");
+  mu_puts(", Architecture: ");
   mu_puts(cpu.architecture->name);
-  mu_puts(", implementer: ");
+  mu_puts(", made by: ");
   mu_puts(cpu.implementer->name);
-  mu_puts(", ");
+  mu_puts(", Partnumber: ");
   mu_put_hex16(cpu.part->partnum, true);
-  mu_puts(", revision: ");
+  mu_puts(", Revision: ");
   mu_puts(cpu.rNpM);
   mu_puts("\r\n> Using Addresses:         ");
   mu_put_hex32(cpu.part->mmio_base, true);
@@ -86,9 +86,9 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_put_uint(date_time.minute);
   mu_puts(":");
   mu_put_uint(date_time.second);
-  mu_puts(", board id ");
+  mu_puts(", board id: ");
   mu_put_hex32(board.revision_raw_value, true);
-   mu_puts("\r\n> Serial nr.               ");
+  mu_puts("\r\n> Serial nr.               ");
   mu_put_hex32(board.serial, true);
   mu_puts("\r\n> Amount of program RAM    ");
   mu_put_uint((board.arm_memory_size / (1024 * 1024)));
@@ -118,20 +118,29 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts("\r\n> Chip temperature:        ");
   mu_put_uint(board.soc_temperature);
   mu_puts(" milli degrees Celsius\r\n");
-  mu_puts("\r\n> ****************************************************\r\n");
+  mu_puts("> ****************************************************\r\n");
 
+#ifdef DUALCORE
   start_core1();                            // Start double pulse generator on core1
-  gpio->init_pin(STATUS_PIN, GPIO_OUTPUT, PULL_DOWN);// Set GPIO 21 voor hart beat indication
-  timer->set(1, BLINK_TIMER);                    // Initialize timer 1 for 1 second intervals
-  irq->init_core0();                         // Initialize IRQs for core0
+  mu_puts("> Running in dual core mode.\r\n");
+#else
+  mu_puts("> Running in single core mode.\r\n");
+#endif
+  gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin for doublepulse generation
+  gpio->init_pin(STATUS_PIN, GPIO_OUTPUT, PULL_DOWN); // Set GPIO 21 voor hart beat indication
+  timer->set(1, BLINK_TIMER);               // Initialize timer 1 for .1 second intervals
+  irq->init_core0();                        // Initialize IRQs for core0
 
   while (1) {
+#ifndef DUALCORE
+    doublepulse_generator(Intervals[0], Intervals[1], Intervals[2], Intervals[3]); // In single core mode, generate the double pulse pattern in the main loop
+#endif
     if (read_json(jsonString, CHAR_BUFFER, (100000))) { // If a character is in the UART buffer, try to get the whole string, or timeout (at 115200 one byte is ~87usec).
       mu_puts("> Received: ");
       mu_puts(jsonString);                  // Print the received JSON string
       mu_puts("\r\n");
       jsmn_parser p;                        // JSON parser
-      jsmntok_t t[10];                      // Array of tokens for JSON parsing
+      jsmntok_t t[128];                     // Array of tokens for JSON parsing
       jsmn_init(&p);
       int r = jsmn_parse(&p, (const char *)jsonString, strlen(jsonString), t, sizeof(t) / sizeof(t[0]));
       if (r < 0) {
@@ -160,7 +169,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
       // Loop through all keys in the JSON object
       for (int i = 1; i < r; i++) {
         if (t[i].type == JSMN_STRING && t[i].size == 1) { // Check if the token is a string and has size 1
-          char key[30];                     // Buffer to hold the key string
+          char key[32];                     // Buffer to hold the key string
           if (t[i].type != JSMN_STRING) {
             mu_puts("> ERR Parsing JSON: Expected a string\r\n");
             continue;
@@ -171,37 +180,30 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
           }
           strncpy(key, (jsonString + t[i].start), (t[i].end - t[i].start)); // Copy the key string from the JSON string
           key[t[i].end - t[i].start] = '\0'; // Null-terminate the key string
-          if (strcmp(key, "pulseWidth1") == 0) {
-            Intervals[0] = strtoul(jsonString + t[i + 1].start, NULL, 10); // Convert the value to unsigned long and store it in the array
-            mailbox->write(4, 0, Intervals[0]); // Send new value to core1 via mailbox
-            mu_puts("> PulseWidth1 now: ");
-            mu_put_uint(Intervals[0]);
-            mu_puts("\r\n");
-          } else if (strcmp(key, "interPulseDelay") == 0) {
-            Intervals[1] = strtoul(jsonString + t[i + 1].start, NULL, 10);
-            mailbox->write(5, 0, Intervals[1]);
-            mu_puts("> InterPulseDelay now: ");
-            mu_put_uint(Intervals[1]);
-            mu_puts("\r\n");
-          } else if (strcmp(key, "pulseWidth2") == 0) {
-            Intervals[2] = strtoul(jsonString + t[i + 1].start, NULL, 10);
-            mailbox->write(6, 0, Intervals[2]);
-            mu_puts("> PulseWidth2 now: ");
-            mu_put_uint(Intervals[2]);
-            mu_puts("\r\n");
-          } else if (strcmp(key, "pulseInterval") == 0) {
-            Intervals[3] = strtoul(jsonString + t[i + 1].start, NULL, 10);
-            mailbox->write(7, 0, Intervals[3]);
-            mu_puts("> PulseInterval now: ");
-            mu_put_uint(Intervals[3]);
-            mu_puts("\r\n");
+
+          static const char *keys[] = {"pulseWidth1", "interPulseDelay", "pulseWidth2", "pulseInterval"};
+          bool updated = true;
+          for (int j = 0; j < 4; j++) {
+            if (strcmp(key, keys[j]) == 0) {
+              Intervals[j] = strtoul(jsonString + t[i + 1].start, NULL, 10);
+              mu_puts("> ");
+              mu_puts(key);
+              mu_puts(" now: ");
+              mu_put_uint(Intervals[j]);
+              mu_puts("\r\n");
+              updated = true;
+              break;
+            }
+          }
+          if (updated) {
+            mailbox->write(0, 1, 0x1);      // Send a signal to core1 that the intervals have been updated
           } else {
             mu_puts("> ERR Parsing JSON: Unknown key: ");
             mu_puts(key);
             mu_puts("\r\n");
           }
-        }
+        } 
       }
     }
-  }
+  } 
 }

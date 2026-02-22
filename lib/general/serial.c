@@ -1,7 +1,10 @@
 #include "include/serial.h"
 #include "../boards/soc/include/uart.h"
+#include "../boards/soc/include/irq.h"
+#include "../general/include/stdlib.h"
 
-volatile rx_buf_t *RX_BUF = {0};          // RX struct (ringbuffer) pointer
+static rx_buf_t _rx_storage;
+volatile rx_buf_t *RX_BUF = &_rx_storage;          // RX struct (ringbuffer) pointer
 
 void mu_puts(const char *s) {
     while (*s) {
@@ -113,18 +116,22 @@ bool rx_available(void) {
 }
 
 void rx_put(const uint8_t c) {
-    uint16_t next = (RX_BUF->head + 1) % RX_BUF_SIZE;
+    uint16_t next = (RX_BUF->head + 1);
+    if (next >= RX_BUF_SIZE) next = 0;
     if (next != RX_BUF->tail) {          // drop byte if buffer full
         RX_BUF->buffer[RX_BUF->head] = c;
+        dmb();                         // Ensure the byte is written to memory before updating head
         RX_BUF->head = next;
     }
 }
 
-int8_t rx_get(void) {
-    if (RX_BUF->head == RX_BUF->tail)
-        return -1;
+int16_t rx_get(void) {
+    if (RX_BUF->head == RX_BUF->tail) return -1;
     uint8_t c = RX_BUF->buffer[RX_BUF->tail];
-    RX_BUF->tail = (RX_BUF->tail + 1) % RX_BUF_SIZE;
-    return c;
-}
+    dmb();
+    uint16_t next = (RX_BUF->tail + 1);
+    if (next >= RX_BUF_SIZE) next = 0;
 
+    RX_BUF->tail = next;
+    return (int16_t)c;
+}

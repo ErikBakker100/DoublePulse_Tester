@@ -348,26 +348,16 @@ found:
 uint16_t read_json(char * const buf, uint16_t maxlen, uint32_t timeout_us) {
     uint16_t i = 0;
     timer->set(TIMER_ID, timeout_us);
-
     buf[0] = '\0';
-
     while (!timer->expired(TIMER_ID) && (i < maxlen - 1)) { // while no timeout and buffer not full
-      while (rx_available()) {
+      if (rx_available()) {
         int16_t c = rx_get();
-        if (c < 0) break;
-
-        buf[i++] = (char)c;
+        if (c >= 0) buf[i++] = (char)c;
       }
-      
-      if (!rx_available()) continue;
-        int16_t c = rx_get();
-        if (c < 0) continue;
-
-        buf[i++] = (char)c;
     }
     // Timeout or overflow → reset
-    timer->clear(TIMER_ID); // reset timeout flag
     buf[i] = '\0';
+    timer->clear(TIMER_ID); // reset timeout flag
    return i;
 }
 

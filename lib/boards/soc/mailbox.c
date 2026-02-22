@@ -1,6 +1,6 @@
 #include "include/mailbox.h"
 #include <stdbool.h>
-#include "BCM2835/include/BCM2835.h"
+#include "../../general/include/stdlib.h"
 
 const mailbox_vc_ops_t *mailbox_vc;
 const mailboxes_ops_t *mailbox;
@@ -25,17 +25,6 @@ volatile uint32_t mailbox_buffer[16] __attribute__((aligned(16)));
     mailbox_buffer[46] = 0x0 end tag
     channel 8: Property tags (ARM -> VC)
 */
-
-/* Data Memory Barrier */
-static inline void dmb(void) {
-    #if defined(__arm__) && (__ARM_ARCH <= 6)
-        // ARMv6 (Pi 1 / Zero)
-        __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 5" : : "r" (0) : "memory");
-    #else
-        // ARMv7 en ARMv8 (Pi 2, 3, 4, 5 in zowel 32-bit als 64-bit)
-        __asm__ __volatile__ ("dmb sy" : : : "memory");
-    #endif
-}
 
 //
 // Write data to the videocore mailbox.
@@ -70,7 +59,7 @@ bool mailbox_process(uint32_t tag, uint32_t *data, uint8_t data_len) {
         mailbox_buffer[5 + i] = data[i];
     }
     mailbox_buffer[5 + data_len] = MAIL_TAG_END;
-    mailbox_vc->write(8, (uint32_t)mailbox_buffer | 0x40000000);
+    mailbox_vc->write(8, (uint32_t)(uintptr_t)mailbox_buffer | 0x40000000);
     mailbox_vc->read(8);
     // 3. Verwerk resultaat (0x80000000 = Success)
     if (mailbox_buffer[1] == MAIL_RESP_OK) {
@@ -213,3 +202,4 @@ uint32_t get_soc_temperature(void) {
     }
     return 0;
 }
+
