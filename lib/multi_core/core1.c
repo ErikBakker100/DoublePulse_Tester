@@ -45,8 +45,16 @@ void doublepulse_generator(uint32_t d1, uint32_t d2, uint32_t d3, uint32_t d4) {
 void core_main_1() {
     irq->init_core1();                      // Initialize IRQs for core1
     while (1) {
-        doublepulse_generator(delay1, delay2, delay3, delay4);
-}
+//        doublepulse_generator(delay1, delay2, delay3, delay4);
+    gpio->set(OUTPUT_PIN);
+    DELAY(delay1); // PulseWidth1
+    gpio->clear(OUTPUT_PIN);
+    DELAY(delay2); // interPulseDelay
+    gpio->set(OUTPUT_PIN);
+    DELAY(delay3); // PulseWith2
+    gpio->clear(OUTPUT_PIN);
+    DELAY(delay4); // Pulseinterval
+    }
 /*  Alternatief voor instabiele DELAY() functie, gebruik PWM in ns modus
     pwm_ns_init();
     irq_init_core1();

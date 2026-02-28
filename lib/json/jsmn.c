@@ -18,7 +18,7 @@ void jsmn_init(jsmn_parser *parser) {
  * Fills token type and boundaries.
  */
 void jsmn_fill_token(jsmntok_t *token, const jsmntype_t type,
-                            const int start, const int end) {
+                            const int32_t start, const int32_t end) {
   token->type = type;
   token->start = start;
   token->end = end;
@@ -28,11 +28,11 @@ void jsmn_fill_token(jsmntok_t *token, const jsmntype_t type,
 /**
  * Parse JSON string and fill tokens.
  */
-int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t *tokens, const unsigned int num_tokens) {
-  int r;
-  int i;
+int32_t jsmn_parse(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t *tokens, const uint32_t num_tokens) {
+  int32_t r;
+  int32_t i;
   jsmntok_t *token;
-  int count = parser->toknext;
+  int32_t count = parser->toknext;
 
   for (; parser->pos < len && js[parser->pos] != '\0'; parser->pos++) {
     char c;
@@ -107,7 +107,7 @@ int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t 
           break;
         }
       }
-      /* Error if unmatched closing bracket */
+      // Error if unmatched closing bracket
       if (i == -1) {
         return JSMN_ERROR_INVAL;
       }
@@ -217,10 +217,10 @@ int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t 
 /**
  * Fills next token with JSON string.
  */
-int jsmn_parse_string(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t *tokens, const size_t num_tokens) {
+int32_t jsmn_parse_string(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t *tokens, const size_t num_tokens) {
   jsmntok_t *token;
 
-  int start = parser->pos;
+  int32_t start = parser->pos;
   
   /* Skip starting quote */
   parser->pos++;
@@ -247,7 +247,7 @@ int jsmn_parse_string(jsmn_parser *parser, const char *js, const size_t len, jsm
 
     /* Backslash: Quoted symbol expected */
     if (c == '\\' && parser->pos + 1 < len) {
-      int i;
+      int32_t i;
       parser->pos++;
       switch (js[parser->pos]) {
       /* Allowed escaped symbols */
@@ -290,11 +290,11 @@ int jsmn_parse_string(jsmn_parser *parser, const char *js, const size_t len, jsm
 /**
  * Fills next available token with JSON primitive.
  */
-int jsmn_parse_primitive(jsmn_parser *parser, const char *js,
+int32_t jsmn_parse_primitive(jsmn_parser *parser, const char *js,
                                 const size_t len, jsmntok_t *tokens,
                                 const size_t num_tokens) {
   jsmntok_t *token;
-  int start;
+  int32_t start;
 
   start = parser->pos;
 

@@ -25,6 +25,7 @@
 
 #include <stddef.h>
 #include "../../general/include/config.h"
+#include <stdint.h>
 
 #define CHAR_BUFFER 100                     // Max size of the JSON string
 
@@ -66,11 +67,11 @@ enum jsmnerr {
  */
 typedef struct jsmntok {
   jsmntype_t type;
-  int start;
-  int end;
-  int size;
+  int32_t start;
+  int32_t end;
+  int32_t size;
 #ifdef JSMN_PARENT_LINKS
-  int parent;
+  int32_t parent;
 #endif
 } __attribute__((packed)) jsmntok_t;
 
@@ -79,9 +80,9 @@ typedef struct jsmntok {
  * the string being parsed now and current position in that string.
  */
 typedef struct jsmn_parser {
-  unsigned int pos;     /* offset in the JSON string */
-  unsigned int toknext; /* next token to allocate */
-  int toksuper;         /* superior token node, e.g. parent object or array */
+  uint32_t pos;     /* offset in the JSON string */
+  uint32_t toknext; /* next token to allocate */
+  int32_t toksuper;         /* superior token node, e.g. parent object or array */
 } jsmn_parser;
 
 /**
@@ -94,7 +95,7 @@ extern void jsmn_init(jsmn_parser *parser);
  * describing
  * a single JSON object.
  */
-extern int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t *tokens, const unsigned int num_tokens);
+extern int32_t jsmn_parse(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t *tokens, const uint32_t num_tokens);
 
 /**
  * Allocates a fresh unused token from the token pool.
@@ -106,19 +107,19 @@ extern jsmntok_t *jsmn_alloc_token(jsmn_parser *parser, jsmntok_t *tokens,
  * Fills token type and boundaries.
  */
 extern void jsmn_fill_token(jsmntok_t *token, const jsmntype_t type,
-                            const int start, const int end);
+                            const int32_t start, const int32_t end);
 
 /**
  * Fills next available token with JSON primitive.
  */
-extern int jsmn_parse_primitive(jsmn_parser *parser, const char *js,
+extern int32_t jsmn_parse_primitive(jsmn_parser *parser, const char *js,
                                 const size_t len, jsmntok_t *tokens,
                                 const size_t num_tokens);
 
 /**
  * Fills next token with JSON string.
  */
-extern int jsmn_parse_string(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t *tokens, const size_t num_tokens);
+extern int32_t jsmn_parse_string(jsmn_parser *parser, const char *js, const size_t len, jsmntok_t *tokens, const size_t num_tokens);
 
 #ifdef __cplusplus
 }

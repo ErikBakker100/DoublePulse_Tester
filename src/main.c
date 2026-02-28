@@ -111,7 +111,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts("\r\n> UART max clock rate:     ");
   mu_put_uint(board.max_clock_rates[UART_id]);
   mu_puts("\r\n> MAC address:             ");
-  for (int i = 0; i < 6; i++) {
+  for (int32_t i = 0; i < 6; i++) {
     mu_put_hex8(board.mac_address[i], false);
     if (i < 5) mu_puts(":");
   }
@@ -140,9 +140,9 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
       mu_puts(jsonString);                  // Print the received JSON string
       mu_puts("\r\n");
       jsmn_parser p;                        // JSON parser
-      jsmntok_t t[128];                     // Array of tokens for JSON parsing
+      static jsmntok_t t[128];              // Array of tokens for JSON parsing
       jsmn_init(&p);
-      int r = jsmn_parse(&p, (const char *)jsonString, strlen(jsonString), t, sizeof(t) / sizeof(t[0]));
+      int32_t r = jsmn_parse(&p, (const char *)jsonString, strlen(jsonString), t, sizeof(t) / sizeof(t[0]));
       if (r < 0) {
         mu_puts("> ERR Parsing JSON: ");
         switch (r) {
@@ -167,9 +167,10 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
         continue;                           // Wait for next JSON string
       }
       // Loop through all keys in the JSON object
-      for (int i = 1; i < r; i++) {
+      bool updated = false;             // remeber if we have updated a value, so we can send a signal to core1 to update the intervals array if needed
+      char key[32];                     // Buffer to hold the key string
+      for (int32_t i = 1; i < r; i++) {
         if (t[i].type == JSMN_STRING && t[i].size == 1) { // Check if the token is a string and has size 1
-          char key[32];                     // Buffer to hold the key string
           if (t[i].type != JSMN_STRING) {
             mu_puts("> ERR Parsing JSON: Expected a string\r\n");
             continue;
@@ -182,8 +183,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
           key[t[i].end - t[i].start] = '\0'; // Null-terminate the key string
 
           static const char *keys[] = {"pulseWidth1", "interPulseDelay", "pulseWidth2", "pulseInterval"};
-          bool updated = true;
-          for (int j = 0; j < 4; j++) {
+          for (int32_t j = 0; j < 4; j++) {
             if (strcmp(key, keys[j]) == 0) {
               Intervals[j] = strtoul(jsonString + t[i + 1].start, NULL, 10);
               mu_puts("> ");
@@ -195,15 +195,15 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
               break;
             }
           }
-          if (updated) {
-            mailbox->write(0, 1, 0x1);      // Send a signal to core1 that the intervals have been updated
-          } else {
-            mu_puts("> ERR Parsing JSON: Unknown key: ");
-            mu_puts(key);
-            mu_puts("\r\n");
-          }
         } 
       }
-    }
+      if (updated) {
+        mailbox->write(0, 1, 0x1);      // Send a signal to core1 that the intervals have been updated
+      } else {
+        mu_puts("> ERR Parsing JSON: Unknown key: ");
+        mu_puts(key);
+        mu_puts("\r\n");
+      }
+    } 
   } 
 }

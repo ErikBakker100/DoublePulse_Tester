@@ -169,7 +169,7 @@ project(doublepulse
 set(CMAKE_C_FLAGS_DEBUG "-Og -g3" CACHE STRING "" FORCE)
 set(CMAKE_ASM_FLAGS_DEBUG "-g3" CACHE STRING "" FORCE)
 
-set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "" FORCE)
 set(CMAKE_ASM_FLAGS_RELEASE "" CACHE STRING "" FORCE)
 
 # ----------------------
@@ -267,7 +267,7 @@ elseif(ARM_BITS STREQUAL "arm64")
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE
-    $<$<COMPILE_LANGUAGE:C>: -Wall -fno-builtin>
+    $<$<COMPILE_LANGUAGE:C>: -Wall -fno-builtin -fno-strict-aliasing>
 	${ARCH_FLAGS}
 )
 
