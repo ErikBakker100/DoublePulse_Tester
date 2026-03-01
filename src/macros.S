@@ -134,6 +134,11 @@ el1_entry_core\core:
     // Set up stack pointer for EL1
     ldr x6, =__stack_el1_top_core\core
     mov sp, x6
+    // We zetten bits 20 en 21 van CPACR_EL1 op 0b11 om toegang te verlenen
+    mrs     x0, cpacr_el1
+    orr     x0, x0, #(3 << 20)      // FPEN bits op 0b11 (Toegang in EL1 en EL0)
+    msr     cpacr_el1, x0
+    isb     // Forceer dat de setting actief is voor de volgende instructie    
     // Install an exception vector.
     ldr x6, =vector_table_\core
     msr vbar_el1, x6
@@ -142,6 +147,7 @@ el1_entry_core\core:
 // If main returns, park the core.
     b       hang
 .endm
+
 // -----------------------------------------------------
 // IRQ entry macro
 // -----------------------------------------------------
