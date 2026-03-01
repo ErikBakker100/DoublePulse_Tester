@@ -14,11 +14,24 @@ SECTIONS
     }
 
     /* --------------------------------------------------
+     * Read-only data (strings, constants)
+     * -------------------------------------------------- */
+    .rodata : ALIGN(16)
+    {
+        *(.rodata .rodata.* .gnu.linkonce.r.*)
+        . = ALIGN(16);
+    }
+    /* --------------------------------------------------
      * Data
      * -------------------------------------------------- */
-    .data :
+    . = ALIGN(16);
+    .data : ALIGN(16)
     {
-        *(.data*)
+        __data_start = .;
+        . = ALIGN(16);
+        *(.data .data.* .gnu.linkonce.d.*)
+        . = ALIGN(16);
+        __data_end = .;
     }
 
     /* --------------------------------------------------
@@ -27,11 +40,12 @@ SECTIONS
      * BSS stands for "block starting symbol".
      * The BSS segment must be zeroed prior to entering C code.
      * -------------------------------------------------- */
-    .bss :
+    .bss : ALIGN(16)
     {
         __bss_start = .;
         *(.bss*)
         *(COMMON)
+        . = ALIGN(16);
         __bss_end = .;
     }
 
@@ -40,13 +54,13 @@ SECTIONS
      * -------------------------------------------------- */
     .vectors_core0 : ALIGN(0x800)
     {
-        *(.vectors_core0)
+        KEEP(*(.vectors_core0))
     }
 
 #ifdef DUALCORE
     .vectors_core1 : ALIGN(0x800)
     {
-        *(.vectors_core1)
+        KEEP(*(.vectors_core1))
     }
 #endif
 
@@ -54,31 +68,38 @@ SECTIONS
      * Stacks
      * -------------------------------------------------- */
     STACK_SIZE = 0x1000;   /* 4 KB per mode */
-    . = ALIGN(16);
+    .stacks (NOLOAD) : ALIGN(16)
+    {
+        . = ALIGN(16);
+        __stack_start__ = .;
 
-    __stack_start__ = .;
+        /* ---------- Core 0 ---------- */
+        . = . +STACK_SIZE;
+        . = ALIGN(16);
+        __stack_svc_top_core0 = .;
 
-    /* ---------- Core 0 ---------- */
-    __stack_svc_start_core0 = .;  . += STACK_SIZE;
-    __stack_svc_top_core0   = .;
+        . = . +STACK_SIZE;
+        . = ALIGN(16);
+        __stack_irq_top_core0 = .;
+        
+        . = . +STACK_SIZE;
+        . = ALIGN(16);
+        __stack_fiq_top_core0 = .;
 
-    __stack_irq_start_core0 = .;  . += STACK_SIZE;
-    __stack_irq_top_core0   = .;
+    #ifdef DUALCORE
+        /* ---------- Core 1 ---------- */
+        . = . +STACK_SIZE;
+        . = ALIGN(16);
+        __stack_svc_top_core1 = .;
 
-    __stack_fiq_start_core0 = .;  . += STACK_SIZE;
-    __stack_fiq_top_core0   = .;
+        . = . +STACK_SIZE;
+        . = ALIGN(16);
+        __stack_irq_top_core1 = .;
 
-#ifdef DUALCORE
-    /* ---------- Core 1 ---------- */
-    __stack_svc_start_core1 = .;  . += STACK_SIZE;
-    __stack_svc_top_core1   = .;
-
-    __stack_irq_start_core1 = .;  . += STACK_SIZE;
-    __stack_irq_top_core1   = .;
-
-    __stack_fiq_start_core1 = .;  . += STACK_SIZE;
-    __stack_fiq_top_core1   = .;
-#endif
+        . = . +STACK_SIZE;
+        . = ALIGN(16);
+        __stack_fiq_top_core1 = .;
+    #endif
 
     /* --------------------------------------------------
      * Aliases / compatibility
@@ -91,4 +112,5 @@ SECTIONS
 #endif
 
     __stack_end__ = .;
+    }
 }
