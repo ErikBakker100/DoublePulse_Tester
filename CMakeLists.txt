@@ -121,11 +121,11 @@ endif()
 # ----------------------
 # Auto select toolchains and Startup files for selected ARCH
 # ----------------------
-if(ARCH STREQUAL "arm32")
+if(ARM_BITS STREQUAL "arm32")
     set(CMAKE_C_COMPILER arm-none-eabi-gcc CACHE PATH "C compiler" FORCE)
     set(CMAKE_ASM_COMPILER arm-none-eabi-gcc CACHE PATH "ASM compiler" FORCE)
     set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start32.s)
-elseif(ARCH STREQUAL "arm64")
+elseif(ARM_BITS STREQUAL "arm64")
     set(CMAKE_C_COMPILER aarch64-none-elf-gcc CACHE PATH "C compiler" FORCE)
     set(CMAKE_ASM_COMPILER aarch64-none-elf-gcc CACHE PATH "ASM compiler" FORCE)
     set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start64.s)
@@ -167,15 +167,17 @@ project(doublepulse
 # Explicit Debug / Release flags
 # ----------------------
 set(CMAKE_C_FLAGS_DEBUG "-Og -g3" CACHE STRING "" FORCE)
-set(CMAKE_ASM_FLAGS_DEBUG "-g3" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS_RELEASE "-O2 -g3 -DNDEBUG" CACHE STRING "" FORCE)
 
-set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "" FORCE)
+set(CMAKE_ASM_FLAGS_DEBUG "-g3" CACHE STRING "" FORCE)
 set(CMAKE_ASM_FLAGS_RELEASE "" CACHE STRING "" FORCE)
+
+message(STATUS "Building for CPU: ${RPI_CPU} ")
 
 # ----------------------
 # Kernel image & linker load address
 # ----------------------
-if(ARCH STREQUAL "arm64") 
+if(ARM_BITS STREQUAL "arm64") 
     set(LINKER_LOAD_ADDR 0x80000)
     set(ARM_64BIT 1)
     # Extra namen waar de firmware naar zoekt op 64-bit systemen
@@ -244,7 +246,7 @@ if(DUALCORE STREQUAL "on")
     DUALCORE)
 endif()
 
-if(ARCH STREQUAL "arm64")
+if(ARM_BITS STREQUAL "arm64")
     target_compile_definitions(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANGUAGE:ASM>:ARCH_ARM64>)
 else()
@@ -255,21 +257,22 @@ endif()
 # Compiler flags
 set(ARCH_FLAGS "")
 
-if(ARM_BITS STREQUAL "arm32")
-    set(ARCH_FLAGS
-        -mcpu=${RPI_CPU}
-        -marm
-    )
-elseif(ARM_BITS STREQUAL "arm64")
-    set(ARCH_FLAGS
-        -mcpu=${RPI_CPU}
-    )
+if(ARM_BITS STREQUAL "arm64")
+    set(ARCH_FLAGS -mstrict-align -mcpu=${RPI_CPU})
+else() # 32-bit
+    set(ARCH_FLAGS -mcpu=${RPI_CPU})
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANGUAGE:C>: -Wall -fno-builtin -fno-strict-aliasing>
 	${ARCH_FLAGS}
 )
+message(STATUS "Compiler flags: ${ARCH_FLAGS} ")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Debug flags: ${CMAKE_C_FLAGS_DEBUG}")
+else()
+    message(STATUS "Release flags: ${CMAKE_C_FLAGS_RELEASE}")
+endif()
 
 # ----------------------
 # Linker flags

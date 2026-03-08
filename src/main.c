@@ -20,9 +20,11 @@
 // | PulseWidth1 | interPulseDelay | PulseWith2 | Pulseinterval
 //                _________________              _______________
 
-static char jsonString[CHAR_BUFFER] = {0};  // Uart buffer for receiving JSON string
 // Core0 is reponsible for updating parameters and communicating with the outside
 // Core1 is generating the pulses based on the values in 'Intervals[]'
+
+  static char jsonString[CHAR_BUFFER];  // Uart buffer for receiving JSON string
+
 void core_main_0(uint32_t arg0, uint32_t arg1) {
   cpu_init();                               // get CPU information, and sest base addresses for peripherals
   date_time_t date_time;
@@ -139,7 +141,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
       mu_puts("> Received: ");
       mu_puts(jsonString);                  // Print the received JSON string
       mu_puts("\r\n");
-      jsmn_parser p;                        // JSON parser
+      static jsmn_parser p;                 // JSON parser
       static jsmntok_t t[128];              // Array of tokens for JSON parsing
       jsmn_init(&p);
       int32_t r = jsmn_parse(&p, (const char *)jsonString, strlen(jsonString), t, sizeof(t) / sizeof(t[0]));

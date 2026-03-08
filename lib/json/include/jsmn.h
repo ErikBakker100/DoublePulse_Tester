@@ -73,7 +73,7 @@ typedef struct jsmntok {
 #ifdef JSMN_PARENT_LINKS
   int32_t parent;
 #endif
-} __attribute__((packed)) jsmntok_t;
+} jsmntok_t;
 
 /**
  * JSON parser. Contains an array of token blocks available. Also stores

@@ -4,7 +4,7 @@
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 uint32_t strlen(const char *);
 int32_t strcmp(const char *, const char *);
-char *strncpy(char *, const char *, unsigned int);
+char *strncpy(char *, const char *, uint32_t);
 uint32_t strtoul(const char *, char **, int);
 void u32_to_str(uint32_t value, char *buf);
 void *memset(void *, int, uint32_t);
@@ -14,10 +14,11 @@ void *memset(void *, int, uint32_t);
 #define DELAY(count) do {               \
     uint32_t __temp = (count);          \
     __asm__ volatile (                  \
-        "   cbz %0, 2f          \n"     \
-        "1: subs %0, %0, #1     \n"     \
-        "   bne 1b              \n"     \
-        "2:                     \n"     \
+        "   cmp %0, #0      \n"         \
+        "   beq 2f          \n"         \
+        "1: subs %0, %0, #1 \n"         \
+        "   bne 1b          \n"         \
+        "2:                 \n"         \
         : "+r" (__temp)                 \
         :                               \
         : "cc"                          \
