@@ -50,27 +50,27 @@ Of course any terminal program can be used as well. 'Realterm', 'Putty', 'Termit
 Make sure your toolchain directory is in your 'PATH' systemvariable.
 
 ## List of possible boards
-Choose onde of the following boards. Use the left side table. f.e. -DBOARD=RPIZ2W
-    RPIA            Raspberry Pi 1A
-    RPIB            Raspberry Pi 1B
-    RPIA_PLUS       Raspberry Pi 1A+
-    RPIB_PLUS       Raspberry Pi 1B+
-    RPI2B           Raspberry Pi 2B
-    RPIALPHA        Raspberry Pi Alpha
-    RPICM1          Raspberry Pi Compute Module 1
-    RPI3B_V11       Raspberry Pi 3B
-    RPIZ1           Raspberry Pi Zero 1
-    RPICM3          Raspberry Pi Compute Module 3
-    RPIZ1W          Raspberry Pi Zero 1W
-    RPI3B           Raspberry Pi 3B
-    RPI3A_PLUS      Raspberry Pi 3A+
-    RPICM3_PLUS     Raspberry Pi Compute Module 3+
-    RPI4B           Raspberry Pi 4B
-    RPI3B_PLUS      Raspberry Pi 3B+
-    RPI400          Raspberry Pi 400
-    RPICM4          Raspberry Pi Compute Module 4
-    RPIZ2W          Raspberry Pi Zero 2(W)
-    RPI5            Raspberry Pi 5
-    RPICM5          Raspberry Pi Compute Module 5
-    RPI500          Raspberry Pi 500
-    RPICM5_LITE     Raspberry Pi Compute Module 5 Lite
+Choose onde of the following boards. Use the left side table. f.e. -DBOARD=RPIZ2W.  
+- RPIA            Raspberry Pi 1A  
+- RPIB            Raspberry Pi 1B  
+- RPIA_PLUS       Raspberry Pi 1A+  
+- RPIB_PLUS       Raspberry Pi 1B+  
+- RPI2B           Raspberry Pi 2B  
+- RPIALPHA        Raspberry Pi Alpha  
+- RPICM1          Raspberry Pi Compute Module 1  
+- RPI3B_V11       Raspberry Pi 3B  
+- RPIZ1           Raspberry Pi Zero 1  
+- RPICM3          Raspberry Pi Compute Module 3  
+- RPIZ1W          Raspberry Pi Zero 1W  
+- RPI3B           Raspberry Pi 3B  
+- RPI3A_PLUS      Raspberry Pi 3A+  
+- RPICM3_PLUS     Raspberry Pi Compute Module 3+  
+- RPI4B           Raspberry Pi 4B  
+- RPI3B_PLUS      Raspberry Pi 3B+  
+- RPI400          Raspberry Pi 400  
+- RPICM4          Raspberry Pi Compute Module 4  
+- RPIZ2W          Raspberry Pi Zero 2(W)  
+- RPI5            Raspberry Pi 5  
+- RPICM5          Raspberry Pi Compute Module 5  
+- RPI500          Raspberry Pi 500  
+- RPICM5_LITE     Raspberry Pi Compute Module 5 Lite  
