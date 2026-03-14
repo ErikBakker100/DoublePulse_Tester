@@ -38,7 +38,3 @@ extern cpu_data_t cpu;
 
 void cpu_init(void);
 void clearBss(void);
-void cpu_dsb(void);
-void cpu_isb(void);
-void cpu_sev(void);
-void cpu_wfe(void);

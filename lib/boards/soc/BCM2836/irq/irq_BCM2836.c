@@ -6,11 +6,7 @@
 #include "../../../../general/include/serial.h"
 #include "../../../../general/include/config.h" // for BLINK_TIMER
 #include "../../../../multi_core/include/core1.h"
-
-void bcm2836_irq_disable(void);
-void bcm2836_irq_enable(void);
-void bcm2836_fiq_disable(void);
-void bcm2836_fiq_enable(void);
+#include "../../../../general/include/stdlib.h"
 
 // ------------------------------------------------------------------------------
 // IRQ handlers for core0
@@ -18,7 +14,7 @@ void bcm2836_fiq_enable(void);
 
 void bcm2836_irq_init_core0(void) {
     // Disable interrupts
-    bcm2836_irq_disable();
+    irq->disable();
     IC_2836->FIQ_CONTROL = 0; // Disable FIQs
     IC_2836->DISABLE_IRQS_BASIC = 0xFFFFFFFF; // Disable all basic IRQs
     IC_2836->DISABLE_IRQS[0] = 0xFFFFFFFF; // Disable all IRQs in bank 0
@@ -32,10 +28,10 @@ void bcm2836_irq_init_core0(void) {
     IC_2836->ENABLE_IRQS[0] = (1 << 29); // Enable Mini UART (bit 61 overall, bit 29 in ENABLE_IRQS[1])
 //    IC_2836->ENABLE_IRQS[0] = (1 << 1); // Enable SYSTEM Timer C1 interrupt (bit 1 overall, bit 1 in ENABLE_IRQS[0])
     // ensure writes reach device before we enable interrupts
-    cpu_dsb();
-    cpu_isb();
+    dsb();
+    isb();
     // Enable interrupts
-    bcm2836_irq_enable();
+    irq->enable();
  }
 
 void bcm2836_irq_handler_core0(void) {
@@ -50,14 +46,14 @@ void bcm2836_irq_handler_core0(void) {
 
 void bcm2836_irq_init_core1(void) {
     // Disable interrupts
-    bcm2836_irq_disable();
+    irq->disable();
     // Enable mailbox interrupts for this core
     CORE_MB_CTRL_2836->MAILBOX_CNTRL[1] = (MBOX0_IRQ); // IRQ voor mailbox 0 van core1 enabelen.
     // ensure writes reach device before we enable interrupts
-    cpu_dsb();
-    cpu_isb();
+    dsb();
+    isb();
     // Enable interrupts
-    bcm2836_irq_enable();
+    irq->enable();
 }
 
 void bcm2836_irq_handler_core1(void) {

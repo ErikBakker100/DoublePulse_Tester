@@ -19,8 +19,6 @@ extern const mailboxes_ops_t *mailbox;
 
 extern volatile uint32_t mailbox_buffer[16];
 
-void bcm283x_mailbox_vc_write(volatile bcm2835_mailbox_vc_regs_t *regs, uint8_t channel, uint32_t addres28);
-uint32_t bcm283x_mailbox_vc_read(volatile bcm2835_mailbox_vc_regs_t *regs, uint8_t channel);
 uint32_t get_firmware_revision();
 uint32_t get_board_revision();
 void get_mac_address(uint8_t* mac);

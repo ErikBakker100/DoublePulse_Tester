@@ -27,3 +27,14 @@ void *memset(void *, int, uint32_t);
 
 /* Data Memory Barrier */
 void dmb(void);
+/* Data Synchronization Barrier */
+void dsb(void);
+/* Instruction Synchronization Barrier */
+void isb(void);
+/* Cache Clean */
+void clean_cache(const volatile void *, uint32_t);
+void invalidate_cache(const volatile void *, uint32_t);
+/* Send Event */
+void sev(void);
+/* Wait for Event */
+void wfe(void);

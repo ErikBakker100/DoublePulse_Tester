@@ -12,11 +12,16 @@
 .extern __stack_fiq_top_core\core
 core_entry_\core:
     cpsid if                     // disable IRQ and FIQ
-#if !defined(RPIZ1)
+#if defined(ARCH_ARMV6)
     // set vector table
     ldr     r5, =vector_table_core\core
     mcr     p15, 0, r5, c12, c0, 0
-    isb
+    mov     r0, #0
+    mcr     p15, 0, r0, c7, c5, 4     // Flush Prefetch Buffer
+#else
+    ldr     r5, =vector_table_core\core
+    mcr     p15, 0, r5, c12, c0, 0
+    isb    
     // Check if we are in Hyp mode
     mrs     r1, cpsr
     and     r1, r1, #0x1F
@@ -29,12 +34,6 @@ core_entry_\core:
     orr     r4, r4, #0x13        // SPSR_hyp = SVC mode (mode bits only)
     msr     SPSR_hyp, r4
     eret
-#else
-    // ARMv6: no Hyp mode, already in SVC (for Zero1)
-    ldr     r5, =vector_table_core\core
-    mcr     p15, 0, r5, c12, c0, 0
-    // ARMv6 ISB via CP15
-    mcr     p15, 0, r0, c7, c5, 4
 #endif
 svc_entry_core\core:
     // setup SVC stack

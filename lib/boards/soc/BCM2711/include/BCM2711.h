@@ -2,12 +2,14 @@
 #include <stdint.h>
 #include "../../include/soc.h"
 #include "../../BCM2835/include/BCM2835.h"
+#include "../../BCM2836/include/BCM2836.h"
 #include "../../BCM2837/include/BCM2837.h"
 
 //
 // System Timer, base address at mmio_base + 0x003000
 //
 // For registers see BCM2835.h
+extern volatile bcm2835_sys_timer_regs_t *SYS_TMR_2711;
 
 //
 // DMA Direct Memory Access (0 - 15), base address at mmio_base + 0x007000 - 0x007F00
@@ -76,6 +78,7 @@ extern volatile bcm2711_armc_regs_t *ARMC_2711;
 // Videocore Mailbox, base address at mmio_base + 0x00B880
 //
 // For registers see BCM2835.h
+extern volatile bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2711;
 
 //
 // 3 x Clock Manager General Purpose Clocks Control, base address at mmio_base + 0x101070
@@ -219,6 +222,7 @@ extern volatile bcm2835_i2c_regs_t *I2C6_2835;
 // PWM0 Pulse Width Modulator, base address at mmio_base + 0x20C000
 //
 // For registers see BCM2835.h
+extern volatile bcm2835_pwm_regs_t *PWM0_271;
 
 //
 // PWM1 Pulse Width Modulator, base address at mmio_base + 0x20C800
@@ -230,11 +234,13 @@ extern volatile bcm2835_pwm_regs_t *PWM1_2835;
 // AUX registers, base address at mmio_base + 0x215000
 //
 // For registers see BCM2835.h
+extern volatile bcm2835_aux_regs_t *AUX_2711;
 
 //
 // Mini UART, base address at mmio_base + 0x215040
 //
 // For registers see BCM2835.h
+extern volatile bcm2835_mu_regs_t *MU_2711;
 
 //
 // SPI1, Universal SPI Master, mmio_base + 0x215000 + 0x80
@@ -249,6 +255,12 @@ typedef struct {
 } bcm2711_aux_spi_regs_t;
 extern volatile bcm2711_aux_spi_regs_t *SPI1_2711;
 extern volatile bcm2711_aux_spi_regs_t *SPI2_2711;
+
+//
+// Mailboxes, base address at 0x40000000 + 0x000080
+//
+// For registers see BCM2836.h
+extern volatile bcm2836_al_mailboxes_regs_t *MAILBOX_2711;
 
 //
 // ARM Local Interrrupt registers, base address at (32bit) 0xff800000 (64bit) 0x4c0000000
@@ -331,7 +343,7 @@ typedef struct {
     uint32_t reserved2[960];           // 0x100-0xFFC padding naar DIR
     volatile uint32_t DIR;             // 0x1000 Deactivate Interrupt
 } bcm2711_int_gic_400_gicc_regs_t;
-extern volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICC_2711;
+extern volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICC_2711 ;
 
 //
 // GIC-400 Virtual Interface Control (GICH), Low Peripheral mode (32 bit) 0xFF844000, High Peripheral mode (64 bit) 0x4C0044000

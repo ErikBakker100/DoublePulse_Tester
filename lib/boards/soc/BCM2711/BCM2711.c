@@ -1,5 +1,9 @@
 #include "include/BCM2711.h"
 #include "gpio/include/gpio_BCM2711.h"
+#include "uart/include/uart_BCM2711.h"
+#include "irq/include/irq_BCM2711.h"
+#include "mailbox/include/mailbox_BCM2711.h"
+#include "timers/include/timers_BCM2711.h"
 
 volatile bcm2835_sys_timer_regs_t *SYS_TMR_2711;
 volatile bcm2835_dma_ctrl_regs_t *DMA00_2711;
@@ -47,6 +51,7 @@ volatile bcm2835_aux_regs_t *AUX_2711;
 volatile bcm2835_mu_regs_t *MU_2711;
 volatile bcm2711_aux_spi_regs_t *SPI1_2711;
 volatile bcm2711_aux_spi_regs_t *SPI2_2711;
+volatile bcm2836_al_mailboxes_regs_t *MAILBOX_2711;
 volatile bcm2711_irqs_arm_local_regs_t *INT_ARM_LOCAL_2711;
 volatile bcm2711_int_gic_400_gicd_regs_t *INT_GICD_2711;
 volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICC_2711;
@@ -100,6 +105,7 @@ void BCM2711_init(const soc_data_t *mmio) {
     MU_2711 = (volatile bcm2835_mu_regs_t *)(mmio->base + 0x215040);
     SPI1_2711 = (volatile bcm2711_aux_spi_regs_t *)(mmio->base + 0x215080);
     SPI2_2711 = (volatile bcm2711_aux_spi_regs_t *)(mmio->base + 0x2150C0);
+    MAILBOX_2711 = (volatile bcm2836_al_mailboxes_regs_t *)(0x40000000UL + 0x000080);
     // GIC-400 Interrupt controller, base = in low Peripheral mode (32 bit) 0xFF840000, in high Peripheral mode (64 bit) 0x4C0040
     INT_ARM_LOCAL_2711 = (volatile bcm2711_irqs_arm_local_regs_t *)(mmio->local_periph_base);
     INT_GICD_2711 = (volatile bcm2711_int_gic_400_gicd_regs_t *)(mmio->local_periph_base + 0x41000);
@@ -108,4 +114,9 @@ void BCM2711_init(const soc_data_t *mmio) {
     INT_GICV_2711 = (volatile bcm2711_int_gic_400_gicc_regs_t *)(mmio->local_periph_base + 0x45000);
 
     bcm2711_gpio_Init();
+    bcm2711_irq_init();
+    bcm2711_mailbox_vc_init();
+    bcm2711_mailbox_init();
+    bcm2711_timer_init();
+    bcm2711_uart_init();
 }

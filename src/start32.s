@@ -1,5 +1,10 @@
 .globl _start
 .extern clearBss
+
+#if defined(RPIA) || defined(RPIB) || defined(RPIA_PLUS) || defined(RPIB_PLUS) || defined(RPIALPHA) || defined(RPICM1) || defined(RPIZ1) || defined(RPIZ1W)
+    #define ARCH_ARMV6
+#endif
+
 #include "macros.S"
 
 // -----------------------------------------------------

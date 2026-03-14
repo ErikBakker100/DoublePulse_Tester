@@ -7,7 +7,7 @@
 
 uart_ops_t *uart;
 
-void mu_set(volatile bcm2835_mu_regs_t *mu_regs, bcm2835_aux_regs_t *aux_regs, uint32_t baudrate) {
+void mu_set(volatile bcm2835_mu_regs_t *mu_regs, volatile bcm2835_aux_regs_t *aux_regs, uint32_t baudrate) {
     aux_regs->ENABLES |= 1;          // Enable Mini UART (bit 0)
     mu_regs->MU_CNTL = 0;            // Disable TX/RX
     mu_regs->MU_LCR = 3;             // 8-bit mode, DLAB=0 (FIFO's used)

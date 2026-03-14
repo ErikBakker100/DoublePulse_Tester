@@ -25,8 +25,8 @@ void start_core1(void) {
 
     *core_boot(1) = (core_reg_t)(uintptr_t)&core_entry_1;
 
-    cpu_dsb();
-    cpu_sev();
+    dsb();
+    sev();
 }
 #endif
 
@@ -102,7 +102,7 @@ void core_main_1() {
 */
 }
 
-void mailbox0_core1(uint32_t delay) {
+void mailbox0_core1(uint32_t data) {
     dmb();
     delay1 = Intervals[0];
     delay2 = Intervals[1];

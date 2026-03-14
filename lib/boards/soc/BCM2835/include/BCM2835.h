@@ -11,7 +11,7 @@ typedef struct {
     volatile uint32_t CHI;                  // 0x08 System Timer Counter Higher 32 bits
     volatile uint32_t C[4];                 // 0x0C-0x18 System Timer Compare 0-3
 } bcm2835_sys_timer_regs_t;
-extern bcm2835_sys_timer_regs_t *SYS_TMR_2835;
+extern volatile bcm2835_sys_timer_regs_t *SYS_TMR_2835;
 
 //
 // DMA Direct Memory Access, base address at mmio_base + 0x007000 - 0x007F00
@@ -187,7 +187,7 @@ typedef struct {
 #define MAIL_RESP_OK    0x80000000          // request successful
 #define MAIL_RESP_ERR   0x80000001          // error parsing request buffer (partial response)
 } bcm2835_mailbox_vc_regs_t;
-extern bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2835;
+extern volatile bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2835;
 
 //
 // 3 x Clock Manager General Purpose Clocks Control, base address at mmio_base + 0x101070
@@ -244,7 +244,7 @@ typedef struct {
     uint32_t reserved11[4];                 // 0xA0-0xAC
     volatile uint32_t TEST;                 // 0xB0 Test
 } bcm2835_gpio_regs_t;
-extern bcm2835_gpio_regs_t *GPIO_2835;
+extern volatile bcm2835_gpio_regs_t *GPIO_2835;
 
 //
 // PL011 UART0, base address at mmio_base + 0x201000
@@ -372,7 +372,7 @@ typedef struct {
     volatile uint32_t IRQ;                  // 0x00 Auxiliary Interrupt status
     volatile uint32_t ENABLES;              // 0x04 Auxiliary enables
 } bcm2835_aux_regs_t;
-extern bcm2835_aux_regs_t *AUX_2835;
+extern volatile bcm2835_aux_regs_t *AUX_2835;
 
 //
 // Mini UART, base address at mmio_base + 0x215040
@@ -390,7 +390,7 @@ typedef struct {
     volatile uint32_t MU_STAT;              // 0x64 Status
     volatile uint32_t MU_BAUD;              // 0x68 Baudrate
 } bcm2835_mu_regs_t;
-extern bcm2835_mu_regs_t *MU_2835;              // Mini UART base address pointer
+extern volatile bcm2835_mu_regs_t *MU_2835;              // Mini UART base address pointer
 
 //
 // SPI0, Universal SPI Master, base address (BA) at mmio_base + 0x215000 + 0x80
@@ -455,5 +455,6 @@ typedef struct {
     dwc_otg_core_global_regs_t_p2 core_p2;
 }  bcm2835_usb_regs_t;
 extern volatile bcm2835_usb_regs_t *USB_2835;
+
 // Initializes the BCM2836 peripherals base address pointers
 void BCM2835_init(const soc_data_t *);

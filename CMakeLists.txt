@@ -89,12 +89,12 @@ if(BOARD STREQUAL "RPIA" OR BOARD STREQUAL "RPIB" OR BOARD STREQUAL "RPIA_PLUS" 
     set(DUALCORE        off)
 elseif(BOARD STREQUAL "RPI2B10" OR BOARD STREQUAL "RPI2B11" OR BOARD STREQUAL "RPI3B11")
     set(RPI_CPU         cortex-a7)
-    set(ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(ARM_BITS        ${ARCH})   # arm32 / arm64
     set(OUTPUT          18)
     set(IMAGEFILE       kernel7.img)
 elseif(BOARD STREQUAL "RPI2B12" OR BOARD STREQUAL "RPI3B12" OR BOARD STREQUAL "RPI3B13" OR BOARD STREQUAL "RPICM3" OR BOARD STREQUAL "RPICM3_PLUS" OR BOARD STREQUAL "RPI3A_PLUS" OR BOARD STREQUAL "RPI3B_PLUS" OR BOARD STREQUAL "RPIZ2W")
     set(RPI_CPU         cortex-a53)
-    set(ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(ARM_BITS        ${ARCH})   # arm32 / arm64
     set(OUTPUT          18)
     if(ARCH STREQUAL "arm64")
          set(IMAGEFILE  kernel8.img)
@@ -103,12 +103,16 @@ elseif(BOARD STREQUAL "RPI2B12" OR BOARD STREQUAL "RPI3B12" OR BOARD STREQUAL "R
     endif()
 elseif(BOARD STREQUAL "RPI4B" OR BOARD STREQUAL "RPI400" OR BOARD STREQUAL "RPICM4" OR BOARD STREQUAL "RPICM4")    
     set(RPI_CPU         cortex-a72)
-    set(ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(ARM_BITS        ${ARCH})   # arm32 / arm64
     set(OUTPUT          18)
-    set(IMAGEFILE       kernel8.img)
+    if(ARCH STREQUAL "arm64")
+         set(IMAGEFILE  kernel8.img)
+    else()
+         set(IMAGEFILE  kernel71.img)
+    endif()
 elseif(BOARD STREQUAL "RPI5" OR BOARD STREQUAL "RPICM5" OR BOARD STREQUAL "RPI500" OR BOARD STREQUAL "RPICM5_LITE")
     set(RPI_CPU         cortex-a76)
-    set(ARM_BITS    ${ARCH})   # arm32 / arm64
+    set(ARM_BITS        ${ARCH})   # arm32 / arm64
     set(OUTPUT          18)
     set(IMAGEFILE       kernel8.img)
 endif()
@@ -248,10 +252,12 @@ endif()
 
 if(ARM_BITS STREQUAL "arm64")
     target_compile_definitions(${PROJECT_NAME} PRIVATE
-    $<$<COMPILE_LANGUAGE:ASM>:ARCH_ARM64>)
+    $<$<COMPILE_LANGUAGE:ASM>:ARCH_ARM64>
+    $<$<COMPILE_LANGUAGE:ASM>:${BOARD}>)  # Voegt bijv. -DRPIZ1 toe aan ASM
 else()
     target_compile_definitions(${PROJECT_NAME} PRIVATE
-    $<$<COMPILE_LANGUAGE:ASM>:ARCH_ARM32>)
+    $<$<COMPILE_LANGUAGE:ASM>:ARCH_ARM32>
+    $<$<COMPILE_LANGUAGE:ASM>:${BOARD}>)  # Voegt bijv. -DRPIZ1 toe aan ASM
 endif()
 
 # Compiler flags
@@ -279,6 +285,7 @@ endif()
 # ----------------------
 
 target_link_options(${PROJECT_NAME} PRIVATE
+    -mcpu=${RPI_CPU}
     -nostartfiles
     -nostdlib
     -ffreestanding
@@ -286,12 +293,13 @@ target_link_options(${PROJECT_NAME} PRIVATE
     -Wl,-Map=${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.map
 )
 
+target_link_libraries(${PROJECT_NAME} PRIVATE gcc)
+
 # ----------------------
 # Post-build acties
 # ----------------------
 
 set(BOOTFILES_DIR ${CMAKE_SOURCE_DIR}/CMakeFiles/boot/PI)
-set(MODEL_CONFIG "[pi4]\narm_boost=1\nenable_jtag_gpio=1\n")
 
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
@@ -309,8 +317,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         COMMAND ${CMAKE_OBJDUMP} -S $<TARGET_FILE:${PROJECT_NAME}> > ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.lst
     )
     set(JTAG_ENABLE "gpio=22-27=a4")
-else()
-    set(JTAG_ENABLE "")
+    if(RPI_CPU STREQUAL "cortex-a72")
+        set(MODEL_CONFIG "enable_jtag_gpio=1")
+    endif()
 endif()
 
 # Zorg dat de kernel altijd gebouwd wordt als je 'make' doet

@@ -26,44 +26,23 @@ volatile uint32_t mailbox_buffer[16] __attribute__((aligned(16)));
     channel 8: Property tags (ARM -> VC)
 */
 
-//
-// Write data to the videocore mailbox.
-//
-void bcm283x_mailbox_vc_write(volatile bcm2835_mailbox_vc_regs_t *regs, uint8_t channel, uint32_t addres28) {
-    while (regs->STATUS & MAIL_FULL); // Wait till the mailbox is empty
-    dmb();
-    regs->WRITE = (addres28 & 0xFFFFFFF0) | (channel & 0xF); // Combine data (28:0) with channel (3:0 bits)
-}
-
-//
-// Read data from the videocore mailbox.
-//
-uint32_t bcm283x_mailbox_vc_read(volatile bcm2835_mailbox_vc_regs_t *regs, uint8_t channel) {
-    for (;;) {                              // Loop until we receive something from the requested channel
-		while ((regs->STATUS & MAIL_EMPTY) != 0);  // Wait for data
-		volatile uint32_t address = regs->READ; // Read the data
-        dmb();                              // Make sure that the CPU will not read from its Cache, but out of RAM.
-		uint8_t readChannel = address & 0xF;
-		if (readChannel == channel)         // Return if it's for the requested channel
-			return address & 0xFFFFFFF0;
-	}
-}
-
 bool mailbox_process(uint32_t tag, uint32_t *data, uint8_t data_len) {
     mailbox_buffer[0] = (6 + data_len) * 4; // Total size in bytes
     mailbox_buffer[1] = MAIL_PROC_REQ;
     mailbox_buffer[2] = tag;                // Tag ID
     mailbox_buffer[3] = data_len * 4;       // Return value size in bytes
     mailbox_buffer[4] = 0;                  // Indicator (written by VC)
-    for (int i = 0; i < data_len; i++) {
+    for (uint8_t i = 0; i < data_len; i++) {
         mailbox_buffer[5 + i] = data[i];
     }
     mailbox_buffer[5 + data_len] = MAIL_TAG_END;
+    clean_cache(mailbox_buffer, mailbox_buffer[0]);
     mailbox_vc->write(8, (uint32_t)(uintptr_t)mailbox_buffer | 0x40000000);
     mailbox_vc->read(8);
+    invalidate_cache(mailbox_buffer, mailbox_buffer[0]);
     // 3. Verwerk resultaat (0x80000000 = Success)
     if (mailbox_buffer[1] == MAIL_RESP_OK) {
-        for (int i = 0; i < data_len; i++) {
+        for (uint8_t i = 0; i < data_len; i++) {
             data[i] = mailbox_buffer[5 + i];
         }
         return true; 

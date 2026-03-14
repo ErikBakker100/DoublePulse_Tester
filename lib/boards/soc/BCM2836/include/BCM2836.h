@@ -7,7 +7,7 @@
 // System Timer, base address at mmio_base + 0x003000
 //
 // For registers see BCM2835.h
-extern bcm2835_sys_timer_regs_t *SYS_TMR_2836;
+extern volatile bcm2835_sys_timer_regs_t *SYS_TMR_2836;
 
 //
 // DMA Direct Memory Access, base address at mmio_base + 0x007000 - 0x007F00
@@ -58,7 +58,7 @@ extern volatile bcm2835_arm_timer_regs_t *ARM_TMR_2836;
 // Videocore Mailbox, base address at mmio_base + 0x00B880
 //
 // For registers see BCM2835.h
-extern bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2836;
+extern volatile bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2836;
 
 //
 // 3 x Clock Manager General Purpose Clocks Control, base address at mmio_base + 0x101070
@@ -70,7 +70,7 @@ extern volatile bcm2835_gp_clks_regs_t *GPIO_CLKS_2836;
 // General Purpose I/O (GPIO), base address at mmio_base + 0x200000
 //
 // For registers see BCM2835.h
-extern bcm2835_gpio_regs_t *GPIO_2836;
+extern volatile bcm2835_gpio_regs_t *GPIO_2836;
 
 //
 // PL011 UART0, base address at mmio_base + 0x201000
@@ -118,13 +118,13 @@ extern volatile bcm2835_i2c_spi_slave_regs_t *I2C_SPI_SLAVE_2836;
 // AUX registers, base address at mmio_base + 0x215000
 //
 // For registers see BCM2835.h
-extern bcm2835_aux_regs_t *AUX_2836;
+extern volatile bcm2835_aux_regs_t *AUX_2836;
 
 //
 // Mini UART, base address at mmio_base + 0x215040
 //
 // For registers see BCM2835.h
-extern bcm2835_mu_regs_t *MU_2836;
+extern volatile bcm2835_mu_regs_t *MU_2836;
 
 //
 // SPI1, Universal SPI Master, base address (BA) at mmio_base + 0x215000 + 0x80
