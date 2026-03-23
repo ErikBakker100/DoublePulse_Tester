@@ -16,8 +16,8 @@ typedef enum {
 
 typedef enum {
     PULL_NONE = 0,
-    PULL_DOWN = 1,
-    PULL_UP = 2,
+    PULL_UP = 1,
+    PULL_DOWN = 2,
 } gpio_pud_t;
 
 typedef struct {

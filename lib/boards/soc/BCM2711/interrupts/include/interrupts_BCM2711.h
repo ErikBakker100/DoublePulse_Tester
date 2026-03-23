@@ -12,10 +12,10 @@
 #define GIC_IRQ_MBOX2      67
 #define GIC_IRQ_MBOX3      68
 
-typedef void (*irq_handler_t)(void *data);
+typedef void (*interrupt_handler_t)(void *data);
 typedef struct {
-    irq_handler_t handler;
+    interrupt_handler_t handler;
     void *data;
-} irq_slot_t;
+} interrupt_slot_t;
 
-void bcm2711_irq_init(void);
+void bcm2711_interrupts_init(void);

@@ -1,7 +1,7 @@
 #include "include/BCM2837.h"
 #include "gpio/include/gpio_BCM2837.h"
 #include "uart/include/uart_BCM2837.h"
-#include "irq/include/irq_BCM2837.h"
+#include "interrupts/include/interrupts_BCM2837.h"
 #include "mailbox/include/mailbox_BCM2837.h"
 #include "timers/include/timers_BCM2837.h"
 
@@ -105,7 +105,7 @@ void BCM2837_init(const soc_data_t *mmio) {
     SYS_TMR_2837->C[3] = 0; // Clear timer counter register
 
     bcm2837_gpio_init();
-    bcm2837_irq_init();
+    bcm2837_interrupts_init();
     bcm2837_mailbox_vc_init();
     bcm2837_mailbox_init();
     bcm2837_timer_init();

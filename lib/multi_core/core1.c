@@ -3,7 +3,7 @@
 #include "../general/include/stdlib.h"
 #include "../general/include/config.h"
 #include "../boards/soc/include/gpio.h"
-#include "../boards/soc/include/irq.h"
+#include "../boards/soc/include/interrupts.h"
 #include "../boards/soc/cpu/include/cpu.h"
 
 volatile uint32_t delay1 = DEFAULT_PULSE_WIDTH1; // holds Pulse Width1 delay
@@ -20,7 +20,6 @@ volatile uint32_t delay4 = DEFAULT_PULSE_INTERVAL; // holds Pulse Interval delay
 // 'ishst' specificeert dat de DSB-operatie betrekking heeft op alle inner-shareable geheugenlocaties en dat het effect van de DSB-operatie zichtbaar moet zijn
 // voor alle inner-shareable caches en buffers voordat de instructie verder gaat.
 */
-#ifdef DUALCORE
 void start_core1(void) {
 
     *core_boot(1) = (core_reg_t)(uintptr_t)&core_entry_1;
@@ -28,7 +27,6 @@ void start_core1(void) {
     dsb();
     sev();
 }
-#endif
 
 void doublepulse_generator(uint32_t d1, uint32_t d2, uint32_t d3, uint32_t d4) {
     gpio->set(OUTPUT_PIN);
@@ -43,9 +41,8 @@ void doublepulse_generator(uint32_t d1, uint32_t d2, uint32_t d3, uint32_t d4) {
 
 // Entry point for core1
 void core_main_1() {
-    irq->init_core1();                      // Initialize IRQs for core1
+    interrupts->init_core1();                      // Initialize IRQs for core1
     while (1) {
-//        doublepulse_generator(delay1, delay2, delay3, delay4);
     gpio->set(OUTPUT_PIN);
     DELAY(delay1); // PulseWidth1
     gpio->clear(OUTPUT_PIN);

@@ -1,4 +1,4 @@
-#include "include/irq_BCM2712.h"
+#include "include/interrupts_BCM2712.h"
 
 /*
 In GICv3 (GIC-600) gebruik je voor de CPU Interface (IAR, EOIR, PMR) geen MMIO meer via een struct. In plaats daarvan gebruik je assembly:

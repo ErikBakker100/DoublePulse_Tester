@@ -7,13 +7,15 @@
 #include "../lib/general/include/stdlib.h"
 #include "../lib/boards/soc/include/gpio.h"
 #include "../lib/boards/soc/include/uart.h"
-#include "../lib/boards/soc/include/irq.h"
+#include "../lib/boards/soc/include/interrupts.h"
 #include "../lib/boards/soc/include/mailbox.h"
 #include "../lib/boards/soc/include/timers.h"
 #include "../lib/multi_core/include/core1.h"
 #include "../lib/json/include/jsmn.h"
 #include "../lib/general/include/serial.h"
 #include "../lib/general/include/date_time.h"
+
+#include "../lib/boards/soc/BCM2711/include/BCM2711.h"
 
 // Timing Variables
 //  _____________                   ____________
@@ -23,7 +25,7 @@
 // Core0 is reponsible for updating parameters and communicating with the outside
 // Core1 is generating the pulses based on the values in 'Intervals[]'
 
-  static char jsonString[CHAR_BUFFER];  // Uart buffer for receiving JSON string
+static char jsonString[CHAR_BUFFER];  // Uart buffer for receiving JSON string
 
 void core_main_0(uint32_t arg0, uint32_t arg1) {
   cpu_init();                               // get CPU information, and sest base addresses for peripherals
@@ -123,7 +125,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts("> ****************************************************\r\n");
 
 #ifdef DUALCORE
-  start_core1();                            // Start double pulse generator on core1
+  start_core1();                            // Start double pulse generator on core1 and enble irq's  
   mu_puts("> Running in dual core mode.\r\n");
 #else
   mu_puts("> Running in single core mode.\r\n");
@@ -131,7 +133,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin for doublepulse generation
   gpio->init_pin(STATUS_PIN, GPIO_OUTPUT, PULL_DOWN); // Set GPIO 21 voor hart beat indication
   timer->set(1, BLINK_TIMER);               // Initialize timer 1 for .1 second intervals
-  irq->init_core0();                        // Initialize IRQs for core0
+  interrupts->init_core0();                        // Initialize IRQs for core0
 
   while (1) {
 #ifndef DUALCORE
@@ -206,6 +208,6 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
         mu_puts(key);
         mu_puts("\r\n");
       }
-    } 
+    }
   } 
 }

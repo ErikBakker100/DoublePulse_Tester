@@ -1,6 +1,6 @@
 #include "include/serial.h"
 #include "../boards/soc/include/uart.h"
-#include "../boards/soc/include/irq.h"
+//#include "../boards/soc/include/interrupts.h"
 #include "../general/include/stdlib.h"
 
 static rx_buf_t _rx_storage;

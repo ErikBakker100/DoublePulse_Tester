@@ -3,8 +3,9 @@
 #include "../../include/uart.h"
 
 void bcm2711_uart_callback(void *data){
+    // Handle UART interrupt (e.g., read received data)
+    uart->getc();
 }
-
 
 void bcm2711_mu_set(uint32_t baudrate) {
     mu_set(MU_2711, AUX_2711, baudrate);

@@ -122,7 +122,7 @@ typedef struct {
     /* 0x88–0x8C: Async Falling Edge Detect */
     volatile uint32_t AFEN[2];              // 0x88–0x8C: Async Falling Edge Detect
     uint32_t reserved10[21];                // 0x90-0xE0
-    volatile uint32_t  GPIO_PUP_PDN_CNTRL_REG[4]; // 0xE4-0xF0 Pull-up/down Control
+    volatile uint32_t  PUP_PDN_CNTRL_REG[4]; // 0xE4-0xF0 Pull-up/down Control
 } bcm2711_gpio_regs_t;
 extern volatile bcm2711_gpio_regs_t *GPIO_2711;
 
@@ -247,11 +247,11 @@ extern volatile bcm2835_mu_regs_t *MU_2711;
 // SPI2, mmio_base + 0x215000 + 0xC0
 //
 typedef struct {
-    volatile uint32_t CNTL_REG[2]; // 0x00-0x04
-    volatile uint32_t STAT_REG;    // 0x08 Status register
-    volatile uint32_t PEEK_REG;    // 0x0C 'Peek
-    volatile uint32_t IO_REG[4];   // 0x10-1C
-    volatile uint32_t TXHOLD_REG[4]; // 0x20-2C
+    volatile uint32_t CNTL_REG[2];          // 0x00-0x04
+    volatile uint32_t STAT_REG;             // 0x08 Status register
+    volatile uint32_t PEEK_REG;             // 0x0C 'Peek
+    volatile uint32_t IO_REG[4];            // 0x10-1C
+    volatile uint32_t TXHOLD_REG[4];        // 0x20-2C
 } bcm2711_aux_spi_regs_t;
 extern volatile bcm2711_aux_spi_regs_t *SPI1_2711;
 extern volatile bcm2711_aux_spi_regs_t *SPI2_2711;
@@ -261,6 +261,119 @@ extern volatile bcm2711_aux_spi_regs_t *SPI2_2711;
 //
 // For registers see BCM2836.h
 extern volatile bcm2836_al_mailboxes_regs_t *MAILBOX_2711;
+
+//
+// GIC-400 Generic Interrupt Controller Distributor (GICD), Low Peripheral mode (32 bit) 0xFF841000, High Peripheral mode (64 bit) 0x4C0041000
+// Detects and prioritizes interrupts, and forwards them to the target CPU interfaces.
+//
+typedef struct {
+    volatile uint32_t CTLR;                 // 0x000        Distributor Control Register. If either, but not both, of the EnableGrp0 and EnableGrp1 bits is set to 1, and the highest priority pending 
+                                            // interrupt is in the disabled group, the Distributor does not forward any pending interrupts to the CPU interfaces.
+    volatile uint32_t TYPER;                // 0x004        Interrupt Controller Type Register. Configuration-dependent register that provides information about the GIC-400's configuration,
+                                            // including the number of interrupt lines supported and the number of CPU interfaces implemented.
+    volatile uint32_t IIDR;                 // 0x008        Distributor Implementer Identification Register
+    uint32_t reserved0[29];                 // 0x00C-0x07C
+    volatile uint32_t IGROUPR[16];          // 0x080-0x0BC  Interrupt Group Registers, only accessible by Secure access.
+                                            // Control whether each interrupt is configured as Group 0 or Group 1. Using Group 0 interrupts as Secure interrupts (FIQ's and IRQ's), and Group 1 interrupts as Non-secure interrupts (IRQ's only).
+                                            // The interrupt group affects whether the interrupt can be forwarded to the CPU interfaces and it also has an impact on later routing decisions in the CPU interfaces,
+                                            // potentially including whether it is signaled to the processor as a FIQ or an IRQ exception request.
+    uint32_t reserved1[16];                 // 0xC0-0x0FC
+    volatile uint32_t ISENABLER[16];        // 0x100-0x13C  Interrupt Set-Enable Registers, 0x100 SGI's and PPI's, 0x104 SPI's. Writing a 1 to a bit in these registers enables the corresponding interrupt. Writing a 0 has no effect.
+    uint32_t reserved2[16];                 // 0x140-0x17C
+    volatile uint32_t ICENABLER[16];        // 0x180-0x1BC  Interrupt Clear-Enable Registers
+    uint32_t reserved3[16];                 // 0x1C0-0x1FC
+    volatile uint32_t ISPENDR[16];          // 0x200-0x23C  Interrupt Set-Pending Registers
+    uint32_t reserved4[16];                 // 0x240-0x27C
+    volatile uint32_t ICPENDR[16];          // 0x280-0x2BC  Interrupt Clear-Pending Registers
+    uint32_t reserved5[16];                 // 0x2C0-0x2FC
+    volatile uint32_t ISACTIVER[16];        // 0x300-0x33C  Interrupt Set-Active Registers
+    uint32_t reserved6[16];                 // 0x340-0x37C
+    volatile uint32_t ICACTIVER[16];        // 0x380-0x3BC  Interrupt Clear-Active Registers
+    uint32_t reserved7[16];                 // 0x3C0-0x3FC
+    volatile uint8_t  IPRIORITYR[1020];     // 0x400-0x7FB  Interrupt Priority Registers. The GIC-400 implements 32 priority levels in Secure state and 16 priority states in Non-secure state.
+    uint32_t reserved8[1];                  // 0x7FC
+#define CORE0 (1<<0)
+#define CORE1 (1<<1)
+#define CORE2 (1<<2)
+#define CORE3 (1<<3)
+#define CORE_ALL (CORE0 | CORE1 | CORE2 | CORE3)
+    volatile uint8_t  ITARGETSR[1020];      // 0x800-0xBFB Interrupt Processor Targets Registers
+    uint32_t  reserved9[1];                 // 0xBFC
+    volatile uint32_t ICFGR[64];            // 0xC00-0xCFC Interrupt Configuration Registers
+    volatile uint32_t PPISR;                // 0xD00 Private Peripheral Interrupt Status Register. Enables a processor to access the status of the PPI inputs on the Distributor. Private Peripheral Interrupt (PPI)
+                                            // This is a peripheral interrupt that is specific to a single processor. Interrupt numbers ID0-ID31 are used for interrupts that are private to a CPU interface.
+    volatile uint32_t SPISR[15];            // 0xD04-0xD3C Shared Peripheral Interrupt Status Registers. Enables a processor to access the status of the IRQS inputs on the Distributor.
+                                            // Non-secure accesses can only read the status of Group 1 interrupts. Shared Peripheral Interrupt (SPI) This is a peripheral interrupt that the Distributor can route to any of a specified 
+                                            // combination of processors.
+    uint32_t reserved10[16];                // 0xD40-0xDFC
+    volatile uint32_t SGIR;                 // 0xF00 Software-generated interrupt (SGI). This is an interrupt generated by software writing to a GICD_SGIR register in the GIC.
+    uint32_t reserved11[3];                 // 0xF04-0xF0C
+    volatile uint32_t CPENDSGIR[4];         // 0xF10-0xF1C  Clear-Pending Registers
+    volatile uint32_t SPENDSGIR[4];         // 0xF20-0xF2C  Set-Pending Registers
+    uint32_t reserved12[40];                // 0xF30-0xFCC
+    volatile uint32_t PIDR4, PIDR5, PIDR6, PIDR7; // 0xFD0-0xFDC Identification registers
+    volatile uint32_t PIDR0, PIDR1, PIDR2, PIDR3; // 0xFE0-0xFEC
+    volatile uint32_t CIDR0, CIDR1, CIDR2, CIDR3; // 0xFF0-0xFFC
+} bcm2711_int_gic_400_gicd_regs_t;
+extern volatile bcm2711_int_gic_400_gicd_regs_t *INT_GICD_2711;
+
+//
+// GIC-400 Generic Interrupt Controller CPU Interface (GICC), Low Peripheral mode (32 bit) 0xFF842000, High Peripheral mode (64 bit) 0x4C0042000
+// 1 instance for each processor in the SoC. Performs priority masking and preemption handling of physical interrupts, signals them to the 
+// corresponding processor, and receives acknowledge and End of Interrupt (EOI) accesses from that processor.
+//
+typedef struct {
+    volatile uint32_t CTLR;                 // 0x00 CPU Interface Control Register. If the Enable bit is set to 1, the CPU interface can signal interrupts 
+                                            // to the processor and receive acknowledge and EOI accesses from the processor. If the Enable bit is set to 0,
+                                            // the CPU interface does not signal any interrupts to the processor and it ignores any acknowledge or EOI accesses from the processor.
+    volatile uint32_t PMR;                  // 0x04 Interrupt Priority Mask Register. The GIC-400 implements 32 priority levels in Secure state and 16 priority
+                                            // states in Non-secure state. The PMR is used to mask interrupts based on their priority level.
+    volatile uint32_t BPR;                  // 0x08 Binary Point
+    volatile uint32_t IAR;                  // 0x0C Interrupt Acknowledge
+    volatile uint32_t EOIR;                 // 0x10 End of Interrupt
+    volatile uint32_t RPR;                  // 0x14 Running Priority
+    volatile uint32_t HPPIR;                // 0x18 Highest Priority Pending
+    volatile uint32_t ABPR;                 // 0x1C Aliased Binary Point
+    volatile uint32_t AIAR;                 // 0x20 Aliased IAR
+    volatile uint32_t AEOIR;                // 0x24 Aliased EOIR
+    volatile uint32_t AHPPIR;               // 0x28 Aliased HPPIR
+    uint32_t reserved0[5];                  // 0x2C-0x3C
+    volatile uint32_t APR[4];               // 0xD0-0xDC Active Priorities
+    volatile uint32_t NSAPR[4];             // 0xE0-0xEC Non-secure Active Priorities
+    uint32_t reserved1[3];                  // 0xF0-0xFA
+    volatile uint32_t IIDR;                 // 0xFC Interface Identification, Provides information about the implementer and revision of the CPU interface
+    uint32_t reserved2[960];                // 0x100-0xFFC padding naar DIR
+    volatile uint32_t DIR;                  // 0x1000 Deactivate Interrupt
+} bcm2711_int_gic_400_gicc_regs_t;
+extern volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICC_2711 ;
+
+//
+// GIC-400 Generic Interrupt Controller Virtual Interface Control Registers(GICH), Low Peripheral mode (32 bit) 0xFF844000, High Peripheral mode (64 bit) 0x4C0044000
+// 1 instance for each processor in the SoC. Allow the hypervisor to control the information presented to the virtual machines by the virtual CPU interface.
+//
+typedef struct {
+    volatile uint32_t HCR;                  // 0x00 Hypervisor Control Register
+    volatile uint32_t VTR;                  // 0x04 VGIC Type Register
+    volatile uint32_t VMCR;                 // 0x08 Virtual Machine Control Register
+    uint32_t reserved0;                     // 0x0C
+    volatile uint32_t MISR;                 // 0x10 Maintenance Interrupt Status Register
+    uint32_t reserved1[3];                  // 0x14-0x1C
+    volatile uint32_t EISR0;                // 0x20 End of Interrupt Status Register 0
+    volatile uint32_t EISR1;                // 0x24 End of Interrupt Status Register 1
+    uint32_t reserved2[2];                  // 0x28-0x2C
+    volatile uint32_t ELRSR0;               // 0x30 Empty List Register Status Register 0
+    volatile uint32_t ELRSR1;               // 0x34 Empty List Register Status Register 1
+    uint32_t reserved3[11];                 // 0x38-0x5C
+    volatile uint32_t APR;                  // 0x60 Active Priorities Register
+    uint32_t reserved4[3];                  // 0x64-0x6C
+    volatile uint32_t LR[64];               // 0x70-0x16C List Registers (GIC-400 ondersteunt er meestal 4-8)
+} bcm2711_int_gic_400_gich_regs_t;
+extern volatile bcm2711_int_gic_400_gich_regs_t *INT_GICH_2711;
+
+//
+// GIC-400 Generic Interrupt Controller Virtual CPU Interface (GICV), Low Peripheral mode (32 bit) 0xFF846000, High Peripheral mode (64 bit) 0x4C0046000
+// 1 instance for each processor in the SoC. Performs priority masking and preemption handling of virtual interrupts, signals them to virtual machines, and receives acknowledge and EOI accesses from those virtual machines.
+extern volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICV_2711;
 
 //
 // ARM Local Interrrupt registers, base address at (32bit) 0xff800000 (64bit) 0x4c0000000
@@ -287,90 +400,6 @@ typedef struct {
     volatile uint32_t FIQ_SOURCE[4];        // 0x70-0x7C Core0-3 FIQ Source
 } bcm2711_irqs_arm_local_regs_t;
 extern volatile bcm2711_irqs_arm_local_regs_t *INT_ARM_LOCAL_2711;
-
-//
-// GIC-400 Interrrupt controller, Distributor (GICD), Low Peripheral mode (32 bit) 0xFF841000, High Peripheral mode (64 bit) 0x4C0041000
-//
-typedef struct {
-    volatile uint32_t CTLR;             // 0x000        Distributor Control Register
-    volatile uint32_t TYPER;            // 0x004        Interrupt Controller Type Register
-    volatile uint32_t IIDR;             // 0x008        Distributor Implementer Identification Register
-    uint32_t reserved0[29];             // 0x00C-0x07C
-    volatile uint32_t IGROUPR[32];      // 0x080-0x0FC  Interrupt Group Registers
-    volatile uint32_t ISENABLER[32];    // 0x100-0x17C  Interrupt Set-Enable Registers
-    volatile uint32_t ICENABLER[32];    // 0x180-0x1FC  Interrupt Clear-Enable Registers
-    volatile uint32_t ISPENDR[32];      // 0x200-0x27C  Interrupt Set-Pending Registers
-    volatile uint32_t ICPENDR[32];      // 0x280-0x2FC  Interrupt Clear-Pending Registers
-    volatile uint32_t ISACTIVER[32];    // 0x300-0x37C  Interrupt Set-Active Registers
-    volatile uint32_t ICACTIVER[32];    // 0x380-0x3FC  Interrupt Clear-Active Registers
-    volatile uint8_t  IPRIORITYR[1020]; // 0x400-0x7FB  Interrupt Priority Registers
-    uint32_t reserved1[1];              // 0x7FC
-    volatile uint8_t  ITARGETSR[1020];  // 0x800-0xBFB  Interrupt Processor Targets Registers
-    uint32_t  reserved2[1];             // 0xBFC
-    volatile uint32_t ICFGR[64];        // 0xC00-0xCFC  Interrupt Configuration Registers
-    volatile uint32_t NSACR[64];        // 0xD00-0xDFC Non-secure Access Control Registers
-    volatile uint32_t SGIR;             // 0xF00  
-    uint32_t reserved3[3];              // 0xF04-0xF0C
-    volatile uint32_t CPENDSGIR[4];     // 0xF10-0xF1C  Clear-Pending Registers
-    volatile uint32_t SPENDSGIR[4];     // 0xF20-0xF2C  Set-Pending Registers
-    uint32_t reserved4[40];             // 0xF30-0xFCC
-    volatile uint32_t PIDR4, PIDR5, PIDR6, PIDR7; // 0xFD0-0xFDC Identification registers
-    volatile uint32_t PIDR0, PIDR1, PIDR2, PIDR3; // 0xFE0-0xFEC
-    volatile uint32_t CIDR0, CIDR1, CIDR2, CIDR3; // 0xFF0-0xFFC
-} bcm2711_int_gic_400_gicd_regs_t;
-extern volatile bcm2711_int_gic_400_gicd_regs_t *INT_GICD_2711;
-
-//
-// GIC-400 Interrrupt controller, CPU Interface (GICC), Low Peripheral mode (32 bit) 0xFF842000, High Peripheral mode (64 bit) 0x4C0042000
-//
-typedef struct {
-    volatile uint32_t CTLR;            // 0x00 Interface Control
-    volatile uint32_t PMR;             // 0x04 Priority Mask
-    volatile uint32_t BPR;             // 0x08 Binary Point
-    volatile uint32_t IAR;             // 0x0C Interrupt Acknowledge
-    volatile uint32_t EOIR;            // 0x10 End of Interrupt
-    volatile uint32_t RPR;             // 0x14 Running Priority
-    volatile uint32_t HPPIR;           // 0x18 Highest Priority Pending
-    volatile uint32_t ABPR;            // 0x1C Aliased Binary Point
-    volatile uint32_t AIAR;            // 0x20 Aliased IAR
-    volatile uint32_t AEOIR;           // 0x24 Aliased EOIR
-    volatile uint32_t AHPPIR;          // 0x28 Aliased HPPIR
-    uint32_t reserved0[5];             // 0x2C-0x3C
-    volatile uint32_t APR[4];          // 0x40-0x4C Active Priorities
-    volatile uint32_t NSAPR[4];         // 0x50-0x5C Non-secure Active Priorities
-    uint32_t reserved1[3];             // 0x60-0x68
-    volatile uint32_t IIDR;            // 0xFC Interface Identification
-    uint32_t reserved2[960];           // 0x100-0xFFC padding naar DIR
-    volatile uint32_t DIR;             // 0x1000 Deactivate Interrupt
-} bcm2711_int_gic_400_gicc_regs_t;
-extern volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICC_2711 ;
-
-//
-// GIC-400 Virtual Interface Control (GICH), Low Peripheral mode (32 bit) 0xFF844000, High Peripheral mode (64 bit) 0x4C0044000
-//
-typedef struct {
-    volatile uint32_t HCR;        // 0x00 Hypervisor Control Register
-    volatile uint32_t VTR;        // 0x04 VGIC Type Register
-    volatile uint32_t VMCR;       // 0x08 Virtual Machine Control Register
-    uint32_t reserved0;           // 0x0C
-    volatile uint32_t MISR;       // 0x10 Maintenance Interrupt Status Register
-    uint32_t reserved1[3];        // 0x14-0x1C
-    volatile uint32_t EISR0;      // 0x20 End of Interrupt Status Register 0
-    volatile uint32_t EISR1;      // 0x24 End of Interrupt Status Register 1
-    uint32_t reserved2[2];        // 0x28-0x2C
-    volatile uint32_t ELRSR0;     // 0x30 Empty List Register Status Register 0
-    volatile uint32_t ELRSR1;     // 0x34 Empty List Register Status Register 1
-    uint32_t reserved3[11];       // 0x38-0x5C
-    volatile uint32_t APR;        // 0x60 Active Priorities Register
-    uint32_t reserved4[3];        // 0x64-0x6C
-    volatile uint32_t LR[64];     // 0x70-0x16C List Registers (GIC-400 ondersteunt er meestal 4-8)
-} bcm2711_int_gic_400_gich_regs_t;
-extern volatile bcm2711_int_gic_400_gich_regs_t *INT_GICH_2711;
-
-//
-// GIC-400 Virtual CPU Interface (GICV), Low Peripheral mode (32 bit) 0xFF846000, High Peripheral mode (64 bit) 0x4C0046000
-//
-extern volatile bcm2711_int_gic_400_gicc_regs_t *INT_GICV_2711;
 
 // Initializes the BCM2711 peripherals base address pointers
 void BCM2711_init(const soc_data_t *);

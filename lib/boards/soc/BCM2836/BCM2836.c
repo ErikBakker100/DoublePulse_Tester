@@ -1,6 +1,6 @@
 #include "include/BCM2836.h"
 #include "gpio/include/gpio_BCM2836.h"
-#include "irq/include/irq_BCM2836.h"
+#include "interrupts/include/interrupts_BCM2836.h"
 #include "uart/include/uart_BCM2836.h"
 #include "timers/include/timers_BCM2836.h"
 #include "mailbox/include/mailbox_BCM2836.h"
@@ -106,7 +106,7 @@ void BCM2836_init(const soc_data_t *mmio) {
     SYS_TMR_2836->C[3] = 0; // Clear timer counter register
 
     bcm2836_gpio_init();
-    bcm2836_irq_init();
+    bcm2836_interrupts_init();
     bcm2836_mailbox_vc_init();
     bcm2836_mailbox_init();
     bcm2836_timer_init();

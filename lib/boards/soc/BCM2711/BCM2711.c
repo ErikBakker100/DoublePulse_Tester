@@ -1,7 +1,7 @@
 #include "include/BCM2711.h"
 #include "gpio/include/gpio_BCM2711.h"
 #include "uart/include/uart_BCM2711.h"
-#include "irq/include/irq_BCM2711.h"
+#include "interrupts/include/interrupts_BCM2711.h"
 #include "mailbox/include/mailbox_BCM2711.h"
 #include "timers/include/timers_BCM2711.h"
 
@@ -114,7 +114,7 @@ void BCM2711_init(const soc_data_t *mmio) {
     INT_GICV_2711 = (volatile bcm2711_int_gic_400_gicc_regs_t *)(mmio->local_periph_base + 0x45000);
 
     bcm2711_gpio_Init();
-    bcm2711_irq_init();
+    bcm2711_interrupts_init();
     bcm2711_mailbox_vc_init();
     bcm2711_mailbox_init();
     bcm2711_timer_init();

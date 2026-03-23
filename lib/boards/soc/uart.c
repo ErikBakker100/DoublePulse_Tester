@@ -12,12 +12,15 @@ void mu_set(volatile bcm2835_mu_regs_t *mu_regs, volatile bcm2835_aux_regs_t *au
     mu_regs->MU_CNTL = 0;            // Disable TX/RX
     mu_regs->MU_LCR = 3;             // 8-bit mode, DLAB=0 (FIFO's used)
     mu_regs->MU_MCR = 0;             // RTS disabled
-    mu_regs->MU_IIR = 6;             // '0110' reset receive and transmit FIFO pointers, does not clear FIFO's !!!
+    while(mu_regs->MU_LSR & 1) { (void)mu_regs->MU_IO; } // Clear the RX FIFO by reading from it until it's empty
     mu_regs->MU_BAUD = (((board.clock_rates[CORE_id]) + (4 * baudrate)) / (8 * baudrate)) - 1;
     // Set GPIO 14 and 15 to ALT5 (Mini UART)
     gpio->init_pin(14, GPIO_ALT5, PULL_NONE);
     gpio->init_pin(15, GPIO_ALT5, PULL_NONE);
+    mu_regs->MU_IER  = ((1 << 0) | (1 << 2) | (1 << 3));     // mini UART RX interrupt enable, BCM2835 errata stelt dat bit 3:2 moeten worden ingesteld voor RX interrupt
+    mu_regs->MU_IIR = 0xC6;          // Bit 6 en 7 op 1 (FIFO enable/clear) + bit 1 en 2 (FIFO reset)
     mu_regs->MU_CNTL = 3;            // Enable TX and RX
+    (void)mu_regs->MU_IO;            // Dummy read to ensure the UART is ready
 }
 
 // Receive char's

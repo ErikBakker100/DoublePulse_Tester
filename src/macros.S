@@ -54,6 +54,9 @@ svc_entry_core\core:
     b       hang
 .endm
 
+// -----------------------------------------------------
+// IRQ entry macro
+// -----------------------------------------------------
 .macro	    irq_entry_x	core
 .globl irq_entry_\core
 .extern irq_handler_core\core
@@ -61,6 +64,19 @@ irq_entry_\core:
     sub lr, lr, #4
     stmfd sp!, {r0-r12, lr}
     bl irq_handler_core\core
+    ldmfd sp!, {r0-r12, pc}^
+.endm
+
+// -----------------------------------------------------
+// FIQ entry macro
+// -----------------------------------------------------
+.macro	    fiq_entry_x	core
+.globl fiq_entry_\core
+.extern fiq_handler_core\core
+fiq_entry_\core:
+    sub lr, lr, #4
+    stmfd sp!, {r0-r12, lr}
+    bl fiq_handler_core\core
     ldmfd sp!, {r0-r12, pc}^
 .endm
 
@@ -76,7 +92,7 @@ vector_table_core\core:
     b   hang                    // data
     b   hang                    // unused
     b   irq_entry_\core         // irq
-    b   hang                    // fiq
+    b   fiq_entry_\core         // fiq
 .endm
 
 #endif // arm32
@@ -159,7 +175,19 @@ irq_entry_\core:
     kernel_exit
 .endm
 
-// Macro to save registers and call the C IRQ handler
+// -----------------------------------------------------
+// FIQ entry macro
+// -----------------------------------------------------
+.macro	    fiq_entry_x	core
+.globl fiq_entry_\core
+.extern fiq_handler_core\core
+fiq_entry_\core:
+    kernel_entry
+    bl      fiq_handler_core\core
+    kernel_exit
+.endm
+
+// Macro to save registers and call the C IRQ or FIQhandler
 .macro	kernel_entry
 .align 4
     // Reserve enough bytes (31 regs * 8 = 248 bytes; + 8 padding => 256 = 16*16)
@@ -182,7 +210,7 @@ irq_entry_\core:
     stp     x30, xzr, [sp, #16*15]   // bewaar x30 (link register)
 	.endm
 
-// Macro to restore registers and return from irq
+// Macro to restore registers and return from irq or fiq handler
 .macro	kernel_exit
 .align 4
     ldp     x0,  x1,  [sp, #16*0]
@@ -225,7 +253,7 @@ vector_table_\core:
 // --- EL1h (THIS IS WHAT WE USE) ---
     ventry core_entry_\core
     ventry irq_entry_\core
-    ventry hang
+    ventry fiq_entry_\core
     ventry hang
 // --- From EL0 ---
     ventry hang

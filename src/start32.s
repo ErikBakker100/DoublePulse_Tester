@@ -17,7 +17,6 @@ _start:
 // -----------------------------------------------------
 //  Entry for Core0 and if defined DUALCORE=on Core1
 // -----------------------------------------------------
-
 core_entry_x 0
 #ifdef DUALCORE
 core_entry_x 1
@@ -28,6 +27,13 @@ core_entry_x 1
 irq_entry_x	0
 #ifdef DUALCORE
 irq_entry_x	1
+#endif
+// -----------------------------------------------------
+//  FIQ handlers for Core0 and if defined DUALCORE=on Core1
+// -----------------------------------------------------
+fiq_entry_x	0
+#ifdef DUALCORE
+fiq_entry_x	1
 #endif
 // -----------------------------------------------------
 //  Vector tables for Core0 and if defined DUALCORE=on Core1

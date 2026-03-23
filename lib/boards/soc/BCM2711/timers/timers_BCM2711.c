@@ -5,8 +5,8 @@
 
 void bcm2711_timer_callback(void *data) {
     // Doe hier je timer-acties (toggle GPIO, etc.)
-    timer->clear(1); // Clear timer hardware flag
-    gpio->toggle(STATUS_PIN);              // Toggle GPIO 21 for heart beat indication
+    timer->clear(1);                        // Clear timer hardware flag
+    gpio->toggle(STATUS_PIN);               // Toggle GPIO for heart beat indication
     timer->set(1, BLINK_TIMER);
 }
 
