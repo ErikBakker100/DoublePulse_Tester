@@ -125,7 +125,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts("> ****************************************************\r\n");
 
 #ifdef DUALCORE
-  start_core1();                            // Start double pulse generator on core1 and enble irq's  
+  start_core(1);                            // Start double pulse generator on core1 and enble irq's  
   mu_puts("> Running in dual core mode.\r\n");
 #else
   mu_puts("> Running in single core mode.\r\n");
@@ -202,7 +202,9 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
         } 
       }
       if (updated) {
+#ifdef DUALCORE
         mailbox->write(0, 1, 0x1);      // Send a signal to core1 that the intervals have been updated
+#endif
       } else {
         mu_puts("> ERR Parsing JSON: Unknown key: ");
         mu_puts(key);

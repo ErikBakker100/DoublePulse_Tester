@@ -1,6 +1,27 @@
 #include "include/multi_core.h"
 
-// core_boot geeft pointer naar write bootadresregister van core 'core_id'
-volatile core_reg_t *core_boot(int core_id) {
-    return (volatile core_reg_t *)((uintptr_t)(BASE_ADDR + (CORE_STRIDE * core_id)));
+// The core boot registers are located at an offset from the local peripheral base, so we need to add the appropriate offset to get the correct address for each core. 
+// The stride between cores is 0x10 (16 bytes) for 32-bit cores and 0x08 (8 bytes) for 64-bit cores, because each core has a separate register for the boot address.
+
+volatile core_reg_t *core_boot(uintptr_t arm_local_base, int core_id) {
+    uintptr_t boot_addr = 0;    
+    switch (cpu.part->soc) {
+        case BCM2836:
+        case BCM2837:
+        case RP3A0:
+            boot_addr = arm_local_base + CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
+            break;
+        case BCM2837B0:
+            boot_addr = arm_local_base + CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
+            break;
+        case BCM2711:
+            boot_addr = CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
+            break;
+        case BCM2835:
+        case BCM2712:
+        case UNKNOWN:                       // board not found, error
+        default:
+            boot_addr = 0; // Invalid SoC, return null pointer
+    }
+    return (volatile core_reg_t *) boot_addr;
 }

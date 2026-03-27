@@ -32,6 +32,7 @@ core_entry_\core:
     mrs     r4, cpsr
     bic     r4, r4, #0x1F
     orr     r4, r4, #0x13        // SPSR_hyp = SVC mode (mode bits only)
+    orr     r4, r4, #0xC0        // SPSR_hyp: disable FIQ and IRQ (bits 7 and 6)
     msr     SPSR_hyp, r4
     eret
 #endif

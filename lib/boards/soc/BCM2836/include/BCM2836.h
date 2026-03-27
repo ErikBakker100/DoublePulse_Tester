@@ -252,7 +252,7 @@ typedef struct {
 extern volatile bcm2836_isr_regs_t *ISR_2836;
 
 //
-// Mailboxes, base address at 0x40000000 + 0x000080
+// Mailboxes, peripherals base address + 0x000080
 //
 typedef struct {
 // Mailbox write-set registers (Write only)

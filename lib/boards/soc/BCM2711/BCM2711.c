@@ -105,7 +105,6 @@ void BCM2711_init(const soc_data_t *mmio) {
     MU_2711 = (volatile bcm2835_mu_regs_t *)(mmio->base + 0x215040);
     SPI1_2711 = (volatile bcm2711_aux_spi_regs_t *)(mmio->base + 0x215080);
     SPI2_2711 = (volatile bcm2711_aux_spi_regs_t *)(mmio->base + 0x2150C0);
-    MAILBOX_2711 = (volatile bcm2836_al_mailboxes_regs_t *)(0x40000000UL + 0x000080);
     // GIC-400 Interrupt controller, base = in low Peripheral mode (32 bit) 0xFF840000, in high Peripheral mode (64 bit) 0x4C0040
     INT_ARM_LOCAL_2711 = (volatile bcm2711_irqs_arm_local_regs_t *)(mmio->local_periph_base);
     INT_GICD_2711 = (volatile bcm2711_int_gic_400_gicd_regs_t *)(mmio->local_periph_base + 0x41000);

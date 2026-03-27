@@ -12,7 +12,7 @@ volatile uint32_t delay3 = DEFAULT_PULSE_WIDTH2; // holds Pulse Width2 delay
 volatile uint32_t delay4 = DEFAULT_PULSE_INTERVAL; // holds Pulse Interval delay
 
 /*
-// Start core1
+// Start core
 // voor 32 bit : asm volatile("dsb sy; sev" ::: "memory");
 // omdat Core1 in WFE staat (Wait For Event) moet asm code worden uitgevoerd om te activeren. 'dsb' is een Data Synchronization Barrier 
 // instructie die ervoor zorgt dat alle voorgaande geheugenoperaties zijn voltooid voordat verder wordt gegaan. 'sev' is de Set Event instructie
@@ -20,13 +20,14 @@ volatile uint32_t delay4 = DEFAULT_PULSE_INTERVAL; // holds Pulse Interval delay
 // 'ishst' specificeert dat de DSB-operatie betrekking heeft op alle inner-shareable geheugenlocaties en dat het effect van de DSB-operatie zichtbaar moet zijn
 // voor alle inner-shareable caches en buffers voordat de instructie verder gaat.
 */
-void start_core1(void) {
 
-    *core_boot(1) = (core_reg_t)(uintptr_t)&core_entry_1;
-
+#ifdef DUALCORE
+void start_core(uint8_t core_nr) {
+    *core_boot(soc.local_periph_base, core_nr) = (core_reg_t)(uintptr_t)&core_entry_1;
     dsb();
     sev();
 }
+#endif
 
 void doublepulse_generator(uint32_t d1, uint32_t d2, uint32_t d3, uint32_t d4) {
     gpio->set(OUTPUT_PIN);
@@ -41,7 +42,7 @@ void doublepulse_generator(uint32_t d1, uint32_t d2, uint32_t d3, uint32_t d4) {
 
 // Entry point for core1
 void core_main_1() {
-    interrupts->init_core1();                      // Initialize IRQs for core1
+//    interrupts->init_core1();                      // Initialize IRQs for core1
     while (1) {
     gpio->set(OUTPUT_PIN);
     DELAY(delay1); // PulseWidth1

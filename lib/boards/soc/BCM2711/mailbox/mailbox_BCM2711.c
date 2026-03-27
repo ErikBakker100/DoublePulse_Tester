@@ -4,26 +4,17 @@
 #include "../../../../general/include/stdlib.h"
 #include "../../../../multi_core/include/core1.h"
 
-static inline uint8_t validate_mailbox(uint8_t mailbox, uint8_t core) {
-    if (mailbox > 3) mailbox = 3;
-    if (core > 3) core = 3;
-    return (core * 4) + mailbox;
-}
-
 uint32_t bcm2711_mailbox_read(uint8_t mailbox, uint8_t core) {
-    uint8_t nr = validate_mailbox(mailbox, core);
-    dmb();
-    uint32_t val = MAILBOX_2711->MBOX_CLR[nr];
-    MAILBOX_2711->MBOX_CLR[nr] = 0xFFFFFFFF;              // Clear all bits
-    dmb();
-    return val;
+    return 0; // Reading from the mailbox is done via interrupts, so this function can be a stub.
 }
 
 void bcm2711_mailbox_write(uint8_t mailbox, uint8_t core, uint32_t val) {
-    uint8_t nr = validate_mailbox(mailbox, core);
-    MAILBOX_2711->MBOX_CLR[nr] = 0xFFFFFFFF;              // Clear mailbox, writing a '1' clears that bit.
+    // GICD_SGIR: Software Generated Interrupt Register
+    // TargetListFilter (bits 25:24) = 00 (gebruik TargetList)
+    // CPUTargetList (bits 23:16) = 0x02 (Core 1 is de tweede bit)
+    // SGIINTID (bits 3:0) = de gewenste ID (bijv. 0)
     dmb();
-    MAILBOX_2711->MBOX_SET[nr] = val;
+    INT_GICD_2711->SGIR = (1 << (16 + core)) | (mailbox & 0xF);
     dmb();
 }
 
