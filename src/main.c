@@ -124,16 +124,16 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts(" milli degrees Celsius\r\n");
   mu_puts("> ****************************************************\r\n");
 
+  gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin for doublepulse generation
+  gpio->init_pin(STATUS_PIN, GPIO_OUTPUT, PULL_DOWN); // Set GPIO 21 voor hart beat indication
+  timer->set(1, BLINK_TIMER);               // Initialize timer 1 for .1 second intervals
+  interrupts->init_core0();                        // Initialize IRQs for core0
 #ifdef DUALCORE
   start_core(1);                            // Start double pulse generator on core1 and enble irq's  
   mu_puts("> Running in dual core mode.\r\n");
 #else
   mu_puts("> Running in single core mode.\r\n");
 #endif
-  gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin for doublepulse generation
-  gpio->init_pin(STATUS_PIN, GPIO_OUTPUT, PULL_DOWN); // Set GPIO 21 voor hart beat indication
-  timer->set(1, BLINK_TIMER);               // Initialize timer 1 for .1 second intervals
-  interrupts->init_core0();                        // Initialize IRQs for core0
 
   while (1) {
 #ifndef DUALCORE

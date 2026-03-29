@@ -14,7 +14,7 @@
 #include "../../../../general/include/config.h" // for BLINK_TIMER
 #include "../../../../multi_core/include/core1.h"
 
-static interrupt_slot_t interrupt_table[256];
+static volatile interrupt_slot_t interrupt_table[256];
 
 // ------------------------------------------------------------------------------
 // GIC-400 helpers
@@ -59,7 +59,7 @@ void bcm2711_interrupts_init_core0(void) {
     static uint8_t uart_data = 0;
     bcm2711_gic400_register_handler(GIC_IRQ_MINI_UART, bcm2711_uart_callback, &uart_data);
     bcm2711_gic400_irq_enable(GIC_IRQ_MINI_UART, CORE0); // Enable mini UART interrupt voor Core 0
-    INT_GICD_2711->CTLR = 1;                // Schakel de Distributor in
+    INT_GICD_2711->CTLR = 3;                // Schakel de Distributor in voor Group 0 (secure) en Group 1 (non secure) interrupts
     interrupts->irq_enable();               // Enable IRQs
 }
 
@@ -84,13 +84,13 @@ void bcm2711_fiq_handler_core0(void) {
 void bcm2711_interrupts_init_core1(void) {
     interrupts->irq_disable();              // Disable IRQs
     interrupts->fiq_disable();              // Disable FIQs
+    INT_GICC_2711->CTLR = 1;                // Schakel de CPU Interface in
     INT_GICC_2711->PMR = 0xFF;              // Priority Mask: laat alle interrupts met prioriteit 0-255 door
     INT_GICC_2711->BPR = 0x3;               // 0x3 of 0x7 negeren subprioriteiten.
-//    INT_GICD_2711->ISENABLER[0] |= ((1 << GIC_IRQ_SGI0) | (1 << GIC_IRQ_SGI1) | (1 << GIC_IRQ_SGI2) | (1 << GIC_IRQ_SGI3)); // Enable SGI0-3 voor mailbox interrupts
     static uint8_t data;                           
     bcm2711_gic400_register_handler(GIC_IRQ_SGI0, bcm2711_mailbox_irq_handler, &data);
-    bcm2711_gic400_irq_enable(GIC_IRQ_SGI0, CORE1); // Enable mailbox0 interrupt voor Core 1
-    INT_GICC_2711->CTLR = 1;                // Schakel de CPU Interface in
+    bcm2711_gic400_irq_enable(GIC_IRQ_SGI0, CORE1);
+    dmb();
     interrupts->irq_enable();               // Enable IRQs
 }
 
@@ -99,7 +99,7 @@ void bcm2711_irq_handler_core1(void) {
     uint32_t irq_id = iar & 0x3FF; 
     // Roep de geregistreerde handler aan
     if (irq_id >= GIC_IRQ_SGI0 && irq_id <= GIC_IRQ_SGI3) {
-        mailbox->read(irq_id, 1);           // Read mailbox voor core1
+        mailbox0_core1(mailbox->read(irq_id, 1)); // BCM2711 uses SGI's 0-3 to signal to update delay values
     }
     INT_GICC_2711->EOIR = iar;              // End of Interrupt schrijven om de interrupt te de-acknowledgen
 }

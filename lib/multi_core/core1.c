@@ -42,7 +42,7 @@ void doublepulse_generator(uint32_t d1, uint32_t d2, uint32_t d3, uint32_t d4) {
 
 // Entry point for core1
 void core_main_1() {
-//    interrupts->init_core1();                      // Initialize IRQs for core1
+    interrupts->init_core1();                      // Initialize IRQs for core1
     while (1) {
     gpio->set(OUTPUT_PIN);
     DELAY(delay1); // PulseWidth1
