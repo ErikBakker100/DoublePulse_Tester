@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 # ----------------------
 # kernel.img	ARMv6 (32-bit)	Pi 1 (A, B, B+), Zero, Zero W, Compute Model 1 = arm1176jzf-s
 # kernel7.img	ARMv7 (32-bit)	Pi 2 (v1.1) = cortex-a7
-# kernel7l.img	ARMv7+LPAE (32-bit)	Pi 4, Pi 400 (De 'l' staat voor Large Physical Address Extension) = cortex-a72
+# kernel7l.img	ARMv7+LPAE (32-bit)	Pi 4B, Pi 400 (De 'l' staat voor Large Physical Address Extension) = cortex-a72
 # kernel7.img	ARMv8 (32-bit)	Zero 2 W, Pi 3  = cortex-a53
 # kernel8.img	ARMv8 (64-bit)	Zero 2 W, Pi 3  = cortex-a53
 # kernel8.img	ARMv8 (64-bit) Pi 4 = cortex-a72
@@ -108,7 +108,7 @@ elseif(BOARD STREQUAL "RPI4B" OR BOARD STREQUAL "RPI400" OR BOARD STREQUAL "RPIC
     if(ARCH STREQUAL "arm64")
          set(IMAGEFILE  kernel8.img)
     else()
-         set(IMAGEFILE  kernel71.img)
+         set(IMAGEFILE  kernel7l.img)
     endif()
 elseif(BOARD STREQUAL "RPI5" OR BOARD STREQUAL "RPICM5" OR BOARD STREQUAL "RPI500" OR BOARD STREQUAL "RPICM5_LITE")
     set(RPI_CPU         cortex-a76)

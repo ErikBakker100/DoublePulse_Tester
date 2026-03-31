@@ -10,6 +10,7 @@
 .extern __stack_svc_top_core\core
 .extern __stack_irq_top_core\core
 .extern __stack_fiq_top_core\core
+
 core_entry_\core:
     cpsid if                     // disable IRQ and FIQ
 #if defined(ARCH_ARMV6)

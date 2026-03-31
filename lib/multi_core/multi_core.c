@@ -15,7 +15,11 @@ volatile core_reg_t *core_boot(uintptr_t arm_local_base, int core_id) {
             boot_addr = arm_local_base + CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
             break;
         case BCM2711:
-            boot_addr = CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
+            #ifdef __aarch64__
+                boot_addr = CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
+            #else
+                boot_addr = arm_local_base + CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
+            #endif
             break;
         case BCM2835:
         case BCM2712:
