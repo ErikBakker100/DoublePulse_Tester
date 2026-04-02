@@ -26,6 +26,8 @@
 // Core1 is generating the pulses based on the values in 'Intervals[]'
 
 static char jsonString[CHAR_BUFFER];  // Uart buffer for receiving JSON string
+static const char *keys[] = { "pulseWidth1", "interPulseDelay", "pulseWidth2", "pulseInterval" };
+
 
 void core_main_0(uint32_t arg0, uint32_t arg1) {
   cpu_init();                               // get CPU information, and sest base addresses for peripherals
@@ -144,7 +146,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
       mu_puts(jsonString);                  // Print the received JSON string
       mu_puts("\r\n");
       static jsmn_parser p;                 // JSON parser
-      static jsmntok_t t[128];              // Array of tokens for JSON parsing
+      static jsmntok_t t[15];              // Array of tokens for JSON parsing
       jsmn_init(&p);
       int32_t r = jsmn_parse(&p, (const char *)jsonString, strlen(jsonString), t, sizeof(t) / sizeof(t[0]));
       if (r < 0) {
@@ -171,45 +173,49 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
         continue;                           // Wait for next JSON string
       }
       // Loop through all keys in the JSON object
-      bool updated = false;             // remeber if we have updated a value, so we can send a signal to core1 to update the intervals array if needed
-      char key[32];                     // Buffer to hold the key string
+      bool updated = false;             // remember if we have updated a value, so we can send a signal to core1 to update the intervals array if needed
+      char key[32] = {0};                     // Buffer to hold the key string
       for (int32_t i = 1; i < r; i++) {
-        if (t[i].type == JSMN_STRING && t[i].size == 1) { // Check if the token is a string and has size 1
-          if (t[i].type != JSMN_STRING) {
-            mu_puts("> ERR Parsing JSON: Expected a string\r\n");
-            continue;
-          }
-          if (t[i].end - t[i].start >= sizeof(key)) {
-            mu_puts(">ERR Parsing JSON: Key is too long.\r\n");
+        if (t[i].type == JSMN_STRING) {
+          uint32_t key_len = t[i].end - t[i].start; // Calculate the size of the key string
+          if (key_len >= sizeof(key)) {
+            mu_puts("> ERR Parsing JSON: Key is too long.\r\n");
             continue;                       // Skip to the next iteration of the loop
           }
-          strncpy(key, (jsonString + t[i].start), (t[i].end - t[i].start)); // Copy the key string from the JSON string
-          key[t[i].end - t[i].start] = '\0'; // Null-terminate the key string
-
-          static const char *keys[] = {"pulseWidth1", "interPulseDelay", "pulseWidth2", "pulseInterval"};
+          strncpy(key, jsonString + t[i].start, key_len); // Copy the key string from the JSON string
+          key[key_len] = '\0'; // Null-terminate the key string
+          bool found = false;
           for (int32_t j = 0; j < 4; j++) {
             if (strcmp(key, keys[j]) == 0) {
-              Intervals[j] = strtoul(jsonString + t[i + 1].start, NULL, 10);
+              Intervals[j] = strtoul(jsonString + t[i+1].start, NULL, 10);
               mu_puts("> ");
               mu_puts(key);
               mu_puts(" now: ");
               mu_put_uint(Intervals[j]);
               mu_puts("\r\n");
               updated = true;
+              found = true;
               break;
-            }
+            } 
           }
-        } 
+          if (!found){
+            mu_puts("> ERR Parsing JSON: Unknown key: ");
+            mu_puts(key);
+            mu_puts("\r\n");
+            mu_puts("> Expected keys: ");
+            for (uint32_t j = 0; j < 4; j++) {
+              mu_puts(keys[j]);
+              mu_puts(", ");
+            }
+            mu_puts("\r\n");
+          }
+        }
       }
-      if (updated) {
 #ifdef DUALCORE
+    if (updated) {
         mailbox->write(0, 1, 0x1);      // Send a signal to core1 that the intervals have been updated
-#endif
-      } else {
-        mu_puts("> ERR Parsing JSON: Unknown key: ");
-        mu_puts(key);
-        mu_puts("\r\n");
       }
+#endif
     }
   } 
 }
