@@ -9,25 +9,38 @@ void format_firmware_time(uint32_t timestamp, date_time_t *dt) {
     dt->hour   = (timestamp / 3600) % 24;
 }
 
+uint16_t is_leap(uint16_t year) {
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+}
+
 void format_firmware_date(uint32_t timestamp, date_time_t *dt) {
-    // 1. Haal het aantal dagen uit de timestamp
-    uint32_t total_days = timestamp / 86400; // 86400 seconden in een dag
+    uint32_t days = timestamp / 86400;
 
-    // 2. Bereken het jaar (beginnend bij 1970)
-    dt->year = 1970 + (total_days / 365);
-    dt->day = total_days % 365;
+    dt->year = 1970;
 
-    // 3. Bereken de maand en de dag
-    uint8_t month_days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    
-    dt->month = 0;
-    while (dt->day >= month_days[dt->month]) {
-        dt->day -= month_days[dt->month];
-        dt->month++;
-        if (dt->month >= 12) break;
+    // 1. Jaar bepalen
+    while (1) {
+        uint32_t days_in_year = is_leap(dt->year) ? 366 : 365;
+        if (days < days_in_year) break;
+        days -= days_in_year;
+        dt->year++;
     }
-    dt->month += 1; // Maanden zijn 1-12
-    dt->day += 1; // Dagen zijn 1-31
+
+    // 2. Maanden bepalen
+    uint8_t month_days[] = {31,28,31,30,31,30,31,31,30,31,30,31};
+
+    if (is_leap(dt->year)) {
+        month_days[1] = 29;
+    }
+
+    dt->month = 0;
+    while (days >= month_days[dt->month]) {
+        days -= month_days[dt->month];
+        dt->month++;
+    }
+
+    dt->month += 1;
+    dt->day = days + 1;
 }
 
 void format_firmware_date_time(uint32_t timestamp, date_time_t *dt) {

@@ -45,6 +45,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts(">\r\n ******************* Used Board *******************\r\n");
   mu_puts("> Model:                   ");
   mu_puts(board.description);
+  mu_put_uint(board.revision_num);
   mu_puts(", ");
   mu_puts(board.memory_size);
   mu_puts(", made by: ");
@@ -129,7 +130,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin for doublepulse generation
   gpio->init_pin(STATUS_PIN, GPIO_OUTPUT, PULL_DOWN); // Set GPIO 21 voor hart beat indication
   timer->set(1, BLINK_TIMER);               // Initialize timer 1 for .1 second intervals
-  interrupts->init_core0();                        // Initialize IRQs for core0
+  interrupts->init_core0();                 // Initialize IRQs for core0
 #ifdef DUALCORE
   start_core(1);                            // Start double pulse generator on core1 and enble irq's  
   mu_puts("> Running in dual core mode.\r\n");
@@ -141,12 +142,12 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
 #ifndef DUALCORE
     doublepulse_generator(Intervals[0], Intervals[1], Intervals[2], Intervals[3]); // In single core mode, generate the double pulse pattern in the main loop
 #endif
-    if (read_json(jsonString, CHAR_BUFFER, (100000))) { // If a character is in the UART buffer, try to get the whole string, or timeout (at 115200 one byte is ~87usec).
+    if (read_json(jsonString, CHAR_BUFFER, (50000))) { // If a character is in the UART buffer, try to get the whole string, or timeout (at 115200 one byte is ~87usec).
       mu_puts("> Received: ");
       mu_puts(jsonString);                  // Print the received JSON string
       mu_puts("\r\n");
       static jsmn_parser p;                 // JSON parser
-      static jsmntok_t t[15];              // Array of tokens for JSON parsing
+      static jsmntok_t t[15];               // Array of tokens for JSON parsing
       jsmn_init(&p);
       int32_t r = jsmn_parse(&p, (const char *)jsonString, strlen(jsonString), t, sizeof(t) / sizeof(t[0]));
       if (r < 0) {
@@ -173,8 +174,10 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
         continue;                           // Wait for next JSON string
       }
       // Loop through all keys in the JSON object
-      bool updated = false;             // remember if we have updated a value, so we can send a signal to core1 to update the intervals array if needed
-      char key[32] = {0};                     // Buffer to hold the key string
+#ifdef DUALCORE
+      bool updated = false;                 // remember if we have updated a value, so we can send a signal to core1 to update the intervals array if needed
+#endif
+      char key[32] = {0};                   // Buffer to hold the key string
       for (int32_t i = 1; i < r; i++) {
         if (t[i].type == JSMN_STRING) {
           uint32_t key_len = t[i].end - t[i].start; // Calculate the size of the key string
@@ -193,7 +196,9 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
               mu_puts(" now: ");
               mu_put_uint(Intervals[j]);
               mu_puts("\r\n");
+#ifdef DUALCORE
               updated = true;
+#endif
               found = true;
               break;
             } 
