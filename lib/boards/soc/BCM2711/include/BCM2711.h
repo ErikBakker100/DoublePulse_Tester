@@ -75,12 +75,6 @@ extern volatile bcm2711_armc_regs_t *ARMC_2711;
 // For registers see BCM2835.h
 
 //
-// Videocore Mailbox, base address at mmio_base + 0x00B880
-//
-// For registers see BCM2835.h
-extern volatile bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2711;
-
-//
 // 3 x Clock Manager General Purpose Clocks Control, base address at mmio_base + 0x101070
 //
 // For registers see BCM2835.h
@@ -402,4 +396,4 @@ typedef struct {
 extern volatile bcm2711_irqs_arm_local_regs_t *INT_ARM_LOCAL_2711;
 
 // Initializes the BCM2711 peripherals base address pointers
-void BCM2711_init(const soc_data_t *);
+void BCM2711_init(const soc_t *);

@@ -2,17 +2,27 @@
 #include <stdint.h>
 #include "../cpu/include/cpu.h"
 
-extern const char* soc_name_table[];
+typedef enum {
+    BCM2835,                                // 0x0
+    BCM2836,                                // 0x1
+    BCM2837,                                // 0x2
+    BCM2711,                                // 0x3
+    BCM2712,                                // 0x4
+    UNKNOWN
+} soc_list_t;
 
 typedef struct {
     uintptr_t base;
-    uintptr_t base_end;
-    uintptr_t gpu_io_base;
-    uintptr_t gpu_mem_base;
     uintptr_t local_periph_base;
-    const char* name;
 } soc_data_t;
-extern soc_data_t soc;
 
-void soc_init(void);
+typedef struct {
+    soc_list_t id;
+    const char* name;
+    soc_data_t data;
+    cpu_t cpu;
+} soc_t;
 
+extern soc_t soc;
+
+void soc_init(soc_t *soc);

@@ -1,5 +1,4 @@
 #include "include/boards.h"
-#include "soc/include/mailbox.h"
 
 void decode_board_revision(board_data_t* board);
 board_data_t board;
@@ -59,14 +58,38 @@ const char* manufacturer_table[] = {
     "unknown"
 };
 
+
+const uintptr_t bases[] = {
+    0x20000000UL,
+    0x3F000000UL,
+    0xFE000000UL
+};
+
 bool board_init(board_data_t *board) {
     bool found = false;
-    soc_init();
     if (board != NULL) {
+        for (uint8_t i = 0; i < 3; i++) {
+            MAILBOX_VC = (mailbox_vc_regs_t  *)(bases[i] + MAILBOX_VC_OFFSET);
+            uint32_t rev = get_board_revision();
+            if (rev) {                      // if we can read a valid board revision, we have found the correct MMIO base for the mailbox
+                board->revision_raw_value = rev;
+                decode_board_revision(board);
+                break;
+            } else {
+                MAILBOX_VC = NULL;     // reset mailbox pointer if this base address did not work
+            }
+        }
+        if (MAILBOX_VC == NULL) {
+            return false;                   // No valid MMIO base found, we can not continue.
+        }
+        uint32_t rev = get_board_revision();
+        if(rev) {
+            
+        } else {
+            return found;                  // board revision not found, we can not continue.
+        }
         board->baudrate = BAUDRATE;
         board->firmware_date = get_firmware_revision();
-        board->revision_raw_value = get_board_revision();
-        decode_board_revision(board);
         board->serial = get_board_serial();
         get_mac_address(board->mac_address);
         get_arm_memory(&board->arm_memory_base, &board->arm_memory_size);
@@ -83,21 +106,23 @@ bool board_init(board_data_t *board) {
                 break;
             }
         }
+        soc_init(&board->soc);
+        cpu_init(&board->soc.cpu);
     }
     return found;
 };
 
 void decode_board_revision(board_data_t* board) {
+    uint32_t rev = board->revision_raw_value;
     // Controleer of het de nieuwe stijl revisiecode is (Bit 23)
     board->rev_scheme = (board->revision_raw_value >> 23) & 0x1;
-    
     if (board->rev_scheme) {
         // Nieuwe stijl
-        board->memory_size  = mem_size_table[(board->revision_raw_value >> 20) & 0x7];
-        board->manufacturer = manufacturer_table[(board->revision_raw_value >> 16) & 0x7];
-//        soc_list_t id = (board->revision_raw_value >> 12) & 0xF;
-        board->revision_model_type = (board->revision_raw_value >> 4)  & 0xFF;
-        board->revision_num = (board->revision_raw_value >> 0)  & 0xF;
+        board->memory_size  = mem_size_table[(rev >> 20) & 0x7];
+        board->manufacturer = manufacturer_table[(rev >> 16) & 0x7];
+        board->soc.id = (rev >> 12) & 0xF;
+        board->revision_model_type = (rev >> 4)  & 0xFF;
+        board->revision_num = (rev >> 0)  & 0xF;
     } else {
         // Oude stijl (pre-Pi 2) - velden zijn hier anders
         board->memory_size  = 0; // Niet gecodeerd in oude stijl

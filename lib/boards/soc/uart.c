@@ -13,7 +13,7 @@ void mu_set(volatile bcm2835_mu_regs_t *mu_regs, volatile bcm2835_aux_regs_t *au
     mu_regs->MU_LCR = 3;             // 8-bit mode, DLAB=0 (FIFO's used)
     mu_regs->MU_MCR = 0;             // RTS disabled
     while(mu_regs->MU_LSR & 1) { (void)mu_regs->MU_IO; } // Clear the RX FIFO by reading from it until it's empty
-    mu_regs->MU_BAUD = (((board.clock_rates[CORE_id]) + (4 * baudrate)) / (8 * baudrate)) - 1;
+    mu_regs->MU_BAUD = (((board.clock_rates_measured[CORE_id]) + (4 * baudrate)) / (8 * baudrate)) - 1;
     // Set GPIO 14 and 15 to ALT5 (Mini UART)
     gpio->init_pin(14, GPIO_ALT5, PULL_NONE);
     gpio->init_pin(15, GPIO_ALT5, PULL_NONE);
@@ -24,16 +24,18 @@ void mu_set(volatile bcm2835_mu_regs_t *mu_regs, volatile bcm2835_aux_regs_t *au
 }
 
 // Receive char's
-bool mu_getc(volatile bcm2835_mu_regs_t *regs) {
-    if (!(regs->MU_IIR & 0x04)) return false; // Receiver does not hold a valid byte
-    while (regs->MU_LSR & 1) { 
-        rx_put(regs->MU_IO & 0xFF);
+bool mu_rxc(volatile bcm2835_mu_regs_t *regs) {
+    bool received = false;
+    while (regs->MU_LSR & 1) {             // Check if data is ready (bit 0 of Line Status Register)
+        uint8_t c = regs->MU_IO & 0xFF;     // Read the received character (mask to 8 bits)
+        rx_put(c);
+        received = true;
     }
-    return true;
+    return received;
 }
 
 // Transmit char 
-void mu_putc(volatile bcm2835_mu_regs_t *regs, const char c) {
+void mu_txc(volatile bcm2835_mu_regs_t *regs, const uint8_t c) {
     do{asm volatile("nop");} while (!(regs->MU_LSR & 0x20)); // Wacht tot de TX FIFO ruimte heeft
    regs->MU_IO = c;              // write the character to the buffer
 }

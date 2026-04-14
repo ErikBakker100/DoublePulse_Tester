@@ -1,7 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "../../boards/soc/BCM2835/include/BCM2835.h"
-#include "../../boards/soc/include/soc.h"
+#include "../../boards/include/boards.h"
 
 // BASE_ADDR depends on architecture, set accordingly. Used for core_boot address table.
 // The auxiliary cores are initially asleep.

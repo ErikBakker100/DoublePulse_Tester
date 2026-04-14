@@ -30,7 +30,6 @@ static const char *keys[] = { "pulseWidth1", "interPulseDelay", "pulseWidth2", "
 
 
 void core_main_0(uint32_t arg0, uint32_t arg1) {
-  cpu_init();                               // get CPU information, and sest base addresses for peripherals
   date_time_t date_time;
   if (!board_init(&board)) return;          // read board information, if false we can not continue.
   uart->set(BAUDRATE);
@@ -43,7 +42,7 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_puts("> | pulseWidth1 | interPulseDelay | pulseWith2 | pulseInterval |\r\n");
   mu_puts(">      70       ______ 30 _________     50     ______ 500_______\r\n");
   mu_puts(">\r\n ******************* Used Board *******************\r\n");
-  mu_puts("> Model:                   ");
+  mu_puts("> Model:                    ");
   mu_puts(board.description);
   mu_put_uint(board.revision_num);
   mu_puts(", ");
@@ -58,30 +57,26 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   } else {
     mu_puts("unknown revision scheme");
   }
-  mu_puts("\r\n> SOC:                     ");
-  mu_puts(soc.name);
-  mu_puts("\r\n> CPU core:                ");
-  mu_puts(cpu.part->name);
+  mu_puts("\r\n> Model nr:                 ");
+  mu_put_hex32(board.revision_raw_value, true);
+  mu_puts("\r\n> SOC:                      ");
+  mu_puts(board.soc.name);
+  mu_puts("\r\n> CPU core:                 ");
+  mu_puts(board.soc.cpu.data->name);
   mu_puts(", Architecture: ");
-  mu_puts(cpu.architecture->name);
+  mu_puts(board.soc.cpu.data->arch);
   mu_puts(", made by: ");
-  mu_puts(cpu.implementer->name);
+  mu_puts(board.soc.cpu.implementer->name);
   mu_puts(", Partnumber: ");
-  mu_put_hex16(cpu.part->partnum, true);
+  mu_put_hex16(board.soc.cpu.data->partnum, true);
   mu_puts(", Revision: ");
-  mu_puts(cpu.rNpM);
-  mu_puts("\r\n> Using Addresses:         ");
-  mu_put_hex32(cpu.part->mmio_base, true);
-  mu_puts(", ");
-  mu_put_hex32(soc.base_end, true);
-  mu_puts(", ");
-  mu_put_hex32(soc.gpu_io_base, true);
-  mu_puts(", ");
-  mu_put_hex32(soc.gpu_mem_base, true);
-  mu_puts(", ");
-  mu_put_hex32(soc.local_periph_base, true);
+  mu_puts(board.soc.cpu.rNpM);
+  mu_puts("\r\n> Using Addresses:          Base: ");
+  mu_put_hex32(board.soc.data.base, true);
+  mu_puts(", Peripheral base: ");
+  mu_put_hex32(board.soc.data.local_periph_base, true);
   format_firmware_date_time(board.firmware_date, &date_time);
-  mu_puts("\r\n> VC firmware date:        ");
+  mu_puts("\r\n> VC firmware date:         ");
   mu_put_uint(date_time.day);
   mu_puts(" ");
   mu_put_uint(date_time.month);
@@ -93,40 +88,49 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_put_uint(date_time.minute);
   mu_puts(":");
   mu_put_uint(date_time.second);
-  mu_puts(", board id: ");
-  mu_put_hex32(board.revision_raw_value, true);
-  mu_puts("\r\n> Serial nr.               ");
+  mu_puts("\r\n> Serial nr.                ");
   mu_put_hex32(board.serial, true);
-  mu_puts("\r\n> Amount of program RAM    ");
+  mu_puts("\r\n> Amount of program RAM     ");
   mu_put_uint((board.arm_memory_size / (1024 * 1024)));
-  mu_puts(", starting at address:  ");
+  mu_puts(", starting at address: ");
   mu_put_hex32(board.arm_memory_base, true);
-  mu_puts("\r\n> Amount of GPU RAM        ");
+  mu_puts("\r\n> Amount of GPU RAM         ");
   mu_put_uint((board.gpu_memory_size / (1024 * 1024)));
-  mu_puts(", starting at address:  ");
+  mu_puts(", starting at address: ");
   mu_put_hex32(board.gpu_memory_base, true);
-  mu_puts("\r\n> ARM Current clock rate:  ");
+  mu_puts("\r\n> ARM Current clock rate:   ");
   mu_put_uint(board.clock_rates[ARM_id]);
-  mu_puts("\r\n> CORE Current clock rate: ");
+  mu_puts("\r\n> CORE Current clock rate:  ");
   mu_put_uint(board.clock_rates[CORE_id]);  
-  mu_puts("\r\n> UART Current clock rate: ");
+  mu_puts("\r\n> UART Current clock rate:  ");
   mu_put_uint(board.clock_rates[UART_id]);
-  mu_puts("\r\n> ARM max clock rate:      ");
+  mu_puts("\r\n> ARM max clock rate:       ");
   mu_put_uint(board.max_clock_rates[ARM_id]);
-  mu_puts("\r\n> CORE max clock rate:     ");
+  mu_puts("\r\n> CORE max clock rate:      ");
   mu_put_uint(board.max_clock_rates[CORE_id]);  
-  mu_puts("\r\n> UART max clock rate:     ");
+  mu_puts("\r\n> UART max clock rate:      ");
   mu_put_uint(board.max_clock_rates[UART_id]);
-  mu_puts("\r\n> MAC address:             ");
+  mu_puts("\r\n> ARM min clock rate:       ");
+  mu_put_uint(board.min_clock_rates[ARM_id]);
+  mu_puts("\r\n> CORE min clock rate:      ");
+  mu_put_uint(board.min_clock_rates[CORE_id]);
+  mu_puts("\r\n> UART min clock rate:      ");
+  mu_put_uint(board.min_clock_rates[UART_id]);
+  mu_puts("\r\n> ARM measured clock rate:  ");
+  mu_put_uint(board.clock_rates_measured[ARM_id]);
+  mu_puts("\r\n> CORE measured clock rate: ");
+  mu_put_uint(board.clock_rates_measured[CORE_id]);
+  mu_puts("\r\n> UART measured clock rate: ");
+  mu_put_uint(board.clock_rates_measured[UART_id]);
+  mu_puts("\r\n> MAC address:              ");
   for (int32_t i = 0; i < 6; i++) {
     mu_put_hex8(board.mac_address[i], false);
     if (i < 5) mu_puts(":");
   }
-  mu_puts("\r\n> Chip temperature:        ");
+  mu_puts("\r\n> Chip temperature:         ");
   mu_put_uint(board.soc_temperature);
   mu_puts(" milli degrees Celsius\r\n");
   mu_puts("> ****************************************************\r\n");
-
   gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin for doublepulse generation
   gpio->init_pin(STATUS_PIN, GPIO_OUTPUT, PULL_DOWN); // Set GPIO 21 voor hart beat indication
   timer->set(1, BLINK_TIMER);               // Initialize timer 1 for .1 second intervals

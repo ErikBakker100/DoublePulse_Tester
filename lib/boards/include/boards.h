@@ -3,6 +3,8 @@
 #include "../../general/include/config.h"
 #include "../../general/include/stdlib.h"
 #include "../soc/include/soc.h"
+#include "../include/mailbox_vc.h"
+#include <stddef.h>
 
 /*
 Revision	Model	        PCB Revision	Memory	        CPU Core            Partnumber  SoC         CORE_FREQ   ARM_FREQ    Network                                     Cores   Notes
@@ -70,26 +72,7 @@ d041a0      CM5 Lite        1.0             8 GB            Cortex-A76 (Armv8-A)
 e041a0      CM5 Lite        1.0             16 GB           Cortex-A76 (Armv8-A)0xD0B       BCM2712                 2.00        Depends on carrier board                    4       (Mfg by Sony)
 */
 
-// Clock IDs, used to index clock rate arrays in board_t
-typedef enum {
-INVALID_id = 0,    // 0x0 
-EMMC_id    = 1,    // 0x1 
-UART_id,           // 0x2
-ARM_id,            // 0x3
-CORE_id,           // 0x4
-V3D_id,            // 0x5
-H264_id,           // 0x6
-ISP_id,            // 0x7
-SDRAM_id,          // 0x8
-PIXEL_id,          // 0x9
-PWM_id,            // 0xa
-HEVC_id,           // 0xb
-EMMC2_id,          // 0xc
-M2MC_id,           // 0xd
-PIXEL_BVB_id,      // 0xe
 
-CLOCK_SIZE          // 0xf
-} clock_id_t;
 
 typedef struct {
     const char* description;
@@ -109,10 +92,11 @@ typedef struct {
     uint32_t gpu_memory_base;               // set during board_init
     uint32_t gpu_memory_size;               // set during board_init
     uint32_t soc_temperature;               // set during board_init
-    uint32_t clock_rates[CLOCK_SIZE]; // set during board_init
+    uint32_t clock_rates[CLOCK_SIZE];       // set during board_init
     uint32_t clock_rates_measured[CLOCK_SIZE]; // set during board_init
-    uint32_t max_clock_rates[CLOCK_SIZE]; // set during board_init
-    uint32_t min_clock_rates[CLOCK_SIZE]; // set during board_init
+    uint32_t max_clock_rates[CLOCK_SIZE];   // set during board_init
+    uint32_t min_clock_rates[CLOCK_SIZE];   // set during board_init
+    soc_t soc;                              // set during board_init
 } board_data_t;
 
 extern board_data_t board;

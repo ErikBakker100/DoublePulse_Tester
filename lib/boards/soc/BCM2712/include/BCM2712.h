@@ -360,4 +360,4 @@ typedef struct {
 extern volatile bcm2712_int_gic_600_gicr_regs_t *INT_GICR_2712[4];
 
 // Initializes the BCM27612 address pointers
-void BCM2712_init(const soc_data_t *);
+void BCM2712_init(soc_t *);

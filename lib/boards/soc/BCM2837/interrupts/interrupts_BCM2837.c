@@ -33,12 +33,12 @@ void bcm2837_interrupts_init_core0(void) {
     isb();
     // Enable interrupts
     interrupts->irq_enable();
-    interrupts->fiq_enable();
+//    interrupts->fiq_enable();
  }
 
 void bcm2837_irq_handler_core0(void) {
     if (AUX_2837->IRQ & 1) {  // Mini UART interrupt
-        uart->getc();
+        uart->rxc();
     }
     
     if (SYS_TMR_2837->CS & (1 << 1)) { // System Timer C1 interrupt
@@ -51,7 +51,7 @@ void bcm2837_irq_handler_core0(void) {
 
 void bcm2837_fiq_handler_core0(void) {
     if (AUX_2837->IRQ & 1) {  // Mini UART interrupt
-        uart->getc();
+        uart->rxc();
     }
     
     if (SYS_TMR_2837->CS & (1 << 1)) { // System Timer C1 interrupt

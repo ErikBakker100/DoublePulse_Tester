@@ -7,13 +7,13 @@ void bcm2836_mu_set(uint32_t baudrate) {
 }
 
 // Receive char's
-bool bcm2836_mu_getc(void) {
-    return mu_getc(MU_2836);
+bool bcm2836_mu_rxc(void) {
+    return mu_rxc(MU_2836);
 }
 
 // Transmit char 
-void bcm2836_mu_putc(const char c) {
-    mu_putc(MU_2836, c); 
+void bcm2836_mu_txc(const uint8_t c) {
+    mu_txc(MU_2836, c); 
 }
 
 // Clear RX buffer mini-UART
@@ -23,9 +23,9 @@ void bcm2836_mu_flush_rx(void) {
 
 uart_ops_t bcm2836_uart_ops = {
     .set = &bcm2836_mu_set,
-    .putc = &bcm2836_mu_putc,
+    .txc = &bcm2836_mu_txc,
     .flush_rx = &bcm2836_mu_flush_rx,
-    .getc = &bcm2836_mu_getc
+    .rxc = &bcm2836_mu_rxc
 };
 
 void bcm2836_uart_init(void)

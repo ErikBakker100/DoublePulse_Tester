@@ -56,12 +56,6 @@ extern volatile bcm2835_ic_regs_t *IC_2837;
 extern volatile bcm2835_arm_timer_regs_t *ARM_TMR_2837;
 
 //
-// Videocore Mailbox, base address at mmio_base + 0x00B880
-//
-// For registers see BCM2835.h
-extern volatile bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2837;
-
-//
 // 3 x Clock Manager General Purpose Clocks Control, base address at mmio_base + 0x101070
 //
 // For registers see BCM2835.h
@@ -202,4 +196,4 @@ extern volatile bcm2836_isr_regs_t *ISR_2837;
 extern volatile bcm2836_al_mailboxes_regs_t *MAILBOX_2837;
 
 // Initializes the BCM2837 address pointers
-void BCM2837_init(const soc_data_t *);
+void BCM2837_init(const soc_t *);

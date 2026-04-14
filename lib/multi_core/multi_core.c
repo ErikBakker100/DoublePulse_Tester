@@ -5,20 +5,20 @@
 
 volatile core_reg_t *core_boot(uintptr_t arm_local_base, int core_id) {
     uintptr_t boot_addr = 0;    
-    switch (cpu.part->soc) {
+    switch (board.soc.id) {
         case BCM2836:
         case BCM2837:
-        case RP3A0:
+            #ifdef __aarch64__
+            boot_addr = CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
+            #else
             boot_addr = arm_local_base + CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
-            break;
-        case BCM2837B0:
-            boot_addr = arm_local_base + CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
+            #endif
             break;
         case BCM2711:
             #ifdef __aarch64__
-                boot_addr = CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
+            boot_addr = CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
             #else
-                boot_addr = arm_local_base + CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
+            boot_addr = arm_local_base + CORE_BOOT_OFFSET + CORE_ID_OFFSET(core_id);
             #endif
             break;
         case BCM2835:

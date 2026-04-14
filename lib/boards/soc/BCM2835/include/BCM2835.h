@@ -169,25 +169,7 @@ typedef struct {
 } bcm2835_arm_timer_regs_t;
 extern volatile bcm2835_arm_timer_regs_t *ARM_TMR_2835;
 
-//
-// Videocore Mailbox, base address at mmio_base + 0x00B880
-// The primary means of communication between the ARM and the VideoCore firmware running on the GPU
-//
-typedef struct {
-    volatile uint32_t READ;                 // 0x00 (Mailbox 0: GPU -> ARM)
-    uint32_t reserved[3];                   // 0x04, 0x08, 0x0C
-    volatile uint32_t PEEK;                 // 0x10
-    volatile uint32_t SENDER;               // 0x14
-    volatile uint32_t STATUS;               // 0x18
-    volatile uint32_t CONFIG;               // 0x1C
-    volatile uint32_t WRITE;                // 0x20 (Mailbox 1: ARM -> GPU)
-#define MAIL_PROC_REQ   0x00000000          // process request
-#define MAIL_FULL       0x80000000          // This bit is set in the status register if there is no space to write into the mailbox
-#define MAIL_EMPTY      0x40000000          // This bit is set in the status register if there is nothing to read from the mailbox
-#define MAIL_RESP_OK    0x80000000          // request successful
-#define MAIL_RESP_ERR   0x80000001          // error parsing request buffer (partial response)
-} bcm2835_mailbox_vc_regs_t;
-extern volatile bcm2835_mailbox_vc_regs_t *MAILBOX_VC_2835;
+
 
 //
 // 3 x Clock Manager General Purpose Clocks Control, base address at mmio_base + 0x101070
@@ -457,4 +439,4 @@ typedef struct {
 extern volatile bcm2835_usb_regs_t *USB_2835;
 
 // Initializes the BCM2836 peripherals base address pointers
-void BCM2835_init(const soc_data_t *);
+void BCM2835_init(soc_t *);

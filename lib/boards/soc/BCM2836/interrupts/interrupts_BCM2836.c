@@ -3,6 +3,8 @@
 #include "../../include/uart.h"
 #include "../../include/mailbox.h"
 #include "../../cpu/include/cpu.h"
+#include "../../include/timers.h"
+#include "../../include/gpio.h"
 #include "../../../../general/include/serial.h"
 #include "../../../../general/include/config.h" // for BLINK_TIMER
 #include "../../../../multi_core/include/core1.h"
@@ -32,18 +34,25 @@ void bcm2836_interrupts_init_core0(void) {
     isb();
     // Enable interrupts
     interrupts->irq_enable();
-    interrupts->fiq_enable();
+//    interrupts->fiq_enable();
  }
 
 void bcm2836_irq_handler_core0(void) {
     if (AUX_2836->IRQ & 1) {  // Mini UART interrupt
-        rx_put(uart->getc());
+        uart->rxc();
+    }
+        
+    if (SYS_TMR_2836->CS & (1 << 1)) { // System Timer C1 interrupt
+        SYS_TMR_2836->CS = (1 << 1);   // Clear the interrupt
+        timer->clear(1);               // Clear timer 1 expiration flag
+        gpio->toggle(STATUS_PIN);      // Toggle GPIO 21 for heart beat indication
+        timer->set(1, BLINK_TIMER);    // Re-set timer 1 for 1 second
     }
 }
 
 void bcm2836_fiq_handler_core0(void) {
     if (AUX_2836->IRQ & 1) {  // Mini UART interrupt
-        rx_put(uart->getc());
+        rx_put(uart->rxc());
     }
 }
 
