@@ -1,7 +1,8 @@
 #pragma once
 #include <stdint.h>
 
-#define OUTPUT_PIN ((uint8_t)OUTPUT)        // GPIO pin used for output, set in CMakeLists.txt
+#define OUTPUT_PIN 18                       // GPIO pin used for output
+#define TRIGGER_PIN 19                      // GPIO pin used for triggering scope on second channel#d
 #define STATUS_PIN 21                       // GPIO pin used for status LED, used for heart beat indication
 
 #define BAUDRATE 115200

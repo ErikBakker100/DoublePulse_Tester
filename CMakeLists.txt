@@ -10,6 +10,8 @@ cmake_minimum_required(VERSION 3.20)
 # kernel8.img	ARMv8 (32-bit and 64-bit) Pi 5 = cortex-a76
 # ----------------------
 
+# In windows create a systemvariable called ARM_NONE_EABI and ARM_AARCH64 and direct it to the arm-none-eabi-gcc and aarch64-none-elf-gcc directory.
+
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 
@@ -22,10 +24,6 @@ set(ARCH "arm64" CACHE STRING "Target architecture")
 set_property(CACHE ARCH PROPERTY STRINGS arm32 arm64)
 validate_choice(ARCH arm32 arm64)
 
-set(DUALCORE "on" CACHE STRING "Dual core support")
-set_property(CACHE DUALCORE PROPERTY STRINGS on off)
-validate_choice(DUALCORE on off)
-
 set(BOARD "RPIZ2W" CACHE STRING "Raspberry Pi model")
 set_property(CACHE BOARD PROPERTY STRINGS RPIA RPIB RPIA_PLUS RPIB_PLUS RPI2B10 RPI2B11 RPI2B12 RPIALPHA RPICM1 RPI3B11 RPI3B12 RPI3B13 RPIZ1 RPICM3 RPIZ1W RPI3A_PLUS RPICM3_PLUS RPI4B RPI3B_PLUS RPI400 RPICM4 RPIZ2W RPI5 RPICM5 RPI500 RPICM5_LITE)
 validate_choice(BOARD RPIA RPIB RPIA_PLUS RPIB_PLUS RPI2B10 RPI2B11 RPI2B12 RPIALPHA RPICM1 RPI3B11 RPI3B12 RPI3B13 RPIZ1 RPICM3 RPIZ1W RPI3A_PLUS RPICM3_PLUS RPI4B RPI3B_PLUS RPI400 RPICM4 RPIZ2W RPI5 RPICM5 RPI500 RPICM5_LITE)
@@ -33,11 +31,6 @@ validate_choice(BOARD RPIA RPIB RPIA_PLUS RPIB_PLUS RPI2B10 RPI2B11 RPI2B12 RPIA
 print_choice(ARCH
     arm32 "arm32 build"
     arm64 "arm64 build"
-)
-
-print_choice(DUALCORE
-    on  "Dual-core build"
-    off "Single-core build"
 )
 
 print_choice(BOARD
@@ -74,9 +67,6 @@ if(BOARD STREQUAL "RPIA" OR BOARD STREQUAL "RPIB" OR BOARD STREQUAL "RPIA_PLUS" 
     if(ARCH STREQUAL "arm64")
         message(FATAL_ERROR "Model does not support arm64")
     endif()
-    if(DUALCORE STREQUAL "on")
-        message(FATAL_ERROR "Model has one core only")
-    endif()
 endif()
 
 # ----------------------
@@ -85,18 +75,14 @@ endif()
 if(BOARD STREQUAL "RPIA" OR BOARD STREQUAL "RPIB" OR BOARD STREQUAL "RPIA_PLUS" OR BOARD STREQUAL "RPIB_PLUS" OR BOARD STREQUAL "RPIALPHA" OR BOARD STREQUAL "RPICM1" OR BOARD STREQUAL "RPIZ1" OR BOARD STREQUAL "RPIZ1W")
     set(RPI_CPU         arm1176jzf-s)
     set(ARM_BITS        arm32)
-    set(OUTPUT          18)
     set(IMAGEFILE       kernel.img)
-    set(DUALCORE        off)
 elseif(BOARD STREQUAL "RPI2B10" OR BOARD STREQUAL "RPI2B11" OR BOARD STREQUAL "RPI3B11")
     set(RPI_CPU         cortex-a7)
     set(ARM_BITS        ${ARCH})   # arm32 / arm64
-    set(OUTPUT          18)
     set(IMAGEFILE       kernel7.img)
 elseif(BOARD STREQUAL "RPI2B12" OR BOARD STREQUAL "RPI3B12" OR BOARD STREQUAL "RPI3B13" OR BOARD STREQUAL "RPICM3" OR BOARD STREQUAL "RPICM3_PLUS" OR BOARD STREQUAL "RPI3A_PLUS" OR BOARD STREQUAL "RPI3B_PLUS" OR BOARD STREQUAL "RPIZ2W")
     set(RPI_CPU         cortex-a53)
     set(ARM_BITS        ${ARCH})   # arm32 / arm64
-    set(OUTPUT          18)
     if(ARCH STREQUAL "arm64")
          set(IMAGEFILE  kernel8.img)
     else()
@@ -105,7 +91,6 @@ elseif(BOARD STREQUAL "RPI2B12" OR BOARD STREQUAL "RPI3B12" OR BOARD STREQUAL "R
 elseif(BOARD STREQUAL "RPI4B" OR BOARD STREQUAL "RPI400" OR BOARD STREQUAL "RPICM4" OR BOARD STREQUAL "RPICM4")    
     set(RPI_CPU         cortex-a72)
     set(ARM_BITS        ${ARCH})   # arm32 / arm64
-    set(OUTPUT          18)
     if(ARCH STREQUAL "arm64")
          set(IMAGEFILE  kernel8.img)
     else()
@@ -114,7 +99,6 @@ elseif(BOARD STREQUAL "RPI4B" OR BOARD STREQUAL "RPI400" OR BOARD STREQUAL "RPIC
 elseif(BOARD STREQUAL "RPI5" OR BOARD STREQUAL "RPICM5" OR BOARD STREQUAL "RPI500" OR BOARD STREQUAL "RPICM5_LITE")
     set(RPI_CPU         cortex-a76)
     set(ARM_BITS        ${ARCH})   # arm32 / arm64
-    set(OUTPUT          18)
     set(IMAGEFILE       kernel8.img)
 endif()
 
@@ -127,12 +111,12 @@ endif()
 # Auto select toolchains and Startup files for selected ARCH
 # ----------------------
 if(ARM_BITS STREQUAL "arm32")
-    set(CMAKE_C_COMPILER arm-none-eabi-gcc CACHE PATH "C compiler" FORCE)
-    set(CMAKE_ASM_COMPILER arm-none-eabi-gcc CACHE PATH "ASM compiler" FORCE)
+    set(CMAKE_C_COMPILER "$ENV{ARM_NONE_EABI}/arm-none-eabi-gcc.exe" CACHE PATH "C compiler" FORCE)
+    set(CMAKE_ASM_COMPILER "$ENV{ARM_NONE_EABI}/arm-none-eabi-gcc.exe" CACHE PATH "ASM compiler" FORCE)
     set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start32.s)
 elseif(ARM_BITS STREQUAL "arm64")
-    set(CMAKE_C_COMPILER aarch64-none-elf-gcc CACHE PATH "C compiler" FORCE)
-    set(CMAKE_ASM_COMPILER aarch64-none-elf-gcc CACHE PATH "ASM compiler" FORCE)
+    set(CMAKE_C_COMPILER "$ENV{ARM_AARCH64}/aarch64-none-elf-gcc.exe" CACHE PATH "C compiler" FORCE)
+    set(CMAKE_ASM_COMPILER "$ENV{ARM_AARCH64}/aarch64-none-elf-gcc.exe" CACHE PATH "ASM compiler" FORCE)
     set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/src/start64.s)
 endif()
 
@@ -142,10 +126,6 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 # Linker script defines
 # ----------------------
 set(LINKER_DEFINES "")
-
-if(DUALCORE STREQUAL "on")
-    list(APPEND LINKER_DEFINES -DDUALCORE)
-endif()
 
 # ----------------------
 # Set output directory for SD-Card
@@ -240,16 +220,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # ----------------------
 # Compiler settings
 # ----------------------
-
-# Passing definitions onto the compiler (for C and ASM)
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-    $<$<COMPILE_LANGUAGE:C>:OUTPUT=${OUTPUT}>
-)
-
-if(DUALCORE STREQUAL "on")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE 
-    DUALCORE)
-endif()
 
 if(ARM_BITS STREQUAL "arm64")
     target_compile_definitions(${PROJECT_NAME} PRIVATE
