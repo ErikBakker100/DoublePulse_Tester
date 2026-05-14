@@ -14,7 +14,6 @@ typedef enum {
 typedef struct {
     uintptr_t base;
     uintptr_t local_periph_base;
-    uintptr_t bus_base;
 } soc_data_t;
 
 typedef struct {

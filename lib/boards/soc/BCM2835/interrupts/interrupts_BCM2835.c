@@ -57,35 +57,19 @@ void bcm2835_fiq_handler_core0(void) {
 // ----------------------------------------------------------------------------------
 
 void bcm2835_irq_disable(void) {
-#ifdef __aarch64__
-    asm volatile("msr daifset, #2" ::: "memory");
-#else
     asm volatile("cpsid i" ::: "memory");
-#endif
 }
 
 void bcm2835_fiq_disable(void) {
-#ifdef __aarch64__
-    asm volatile("msr daifset, #1" ::: "memory");
-#else
     asm volatile("cpsid f" ::: "memory");
-#endif
 }
 
 void bcm2835_irq_enable(void) {
-#ifdef __aarch64__
-    asm volatile("msr daifclr, #2" ::: "memory");
-#else
     asm volatile("cpsie i" ::: "memory");
-#endif
 }
 
 void bcm2835_fiq_enable(void) {
-#ifdef __aarch64__
-    asm volatile("msr daifclr, #1" ::: "memory");
-#else
     asm volatile("cpsie f" ::: "memory");
-#endif
 }
 
 const interrupts_ops_t bcm2835_interrupts_ops = {

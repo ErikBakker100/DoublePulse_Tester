@@ -1,5 +1,5 @@
 #include "include/soc.h"
-#include "../../general/include/stdlib.h"
+
 #include "BCM2835/include/BCM2835.h"
 #include "BCM2836/include/BCM2836.h"
 #include "BCM2837/include/BCM2837.h"
@@ -15,16 +15,15 @@ const soc_t soc_list[] = {
     {UNKNOWN, "Unknown SoC"}
 };
 
-const uintptr_t memory_table[][3] = {
-    //physicalbase, local_periph_base, bus_base
-    { 0x20000000UL, 0x00000000UL, 0x7E000000}, // BCM2835
-    { 0x3F000000UL, 0x40000000UL, 0x7E000000}, // BCM2836
-    { 0x3F000000UL, 0x40000000UL, 0x7E000000}, // BCM2837
-    { 0xFE000000UL, 0xFF800000UL, 0x7E000000}, // BCM2711
-    { 0xFE000000UL, 0xFF800000UL, 0x7E000000}, // BCM2712, TODO: BCM2712 requires new mapping (RP1 southbridge)
-    { 0x00000000UL, 0x00000000UL, 0x7E000000}  // UNKNOWN
+uintptr_t memory_table[][2] = {
+    //        base, local_periph_base
+    { 0x20000000UL, 0x00000000UL}, // BCM2835
+    { 0x3F000000UL, 0x40000000UL}, // BCM2836
+    { 0x3F000000UL, 0x40000000UL}, // BCM2837
+    { 0xFE000000UL, 0xFF800000UL}, // BCM2711
+    { 0xFE000000UL, 0xFF800000UL}, // BCM2712, TODO: BCM2712 requires new mapping (RP1 southbridge)
+    { 0x00000000UL, 0x00000000UL}  // UNKNOWN
 };
-const uint8_t memory_table_len = ARRAY_SIZE(memory_table);
 
 void soc_init(soc_t *soc){
         soc_list_t id = soc->id;
