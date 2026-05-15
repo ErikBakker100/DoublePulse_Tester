@@ -32,5 +32,5 @@ void bcm2711_mailbox_init(void) {
 // --------------------------------------------------------------
 void bcm2711_mailbox_irq_handler(void *data) {
     uint32_t result = mailbox->read(0, 1); // Read mailbox 0 for core1
-    mailbox0_core1(result);
+    mailbox0(result);
 }

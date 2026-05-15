@@ -59,6 +59,9 @@ void bcm2711_interrupts_init_core0(void) {
     static uint8_t uart_data = 0;
     bcm2711_gic400_register_handler(GIC_IRQ_MINI_UART, bcm2711_uart_callback, &uart_data);
     bcm2711_gic400_irq_enable(GIC_IRQ_MINI_UART, CORE0); // Enable mini UART interrupt voor Core 0
+    static uint8_t data;                           
+    bcm2711_gic400_register_handler(GIC_IRQ_SGI0, bcm2711_mailbox_irq_handler, &data);
+    bcm2711_gic400_irq_enable(GIC_IRQ_SGI0, CORE0);
     INT_GICD_2711->CTLR = 3;                // Schakel de Distributor in voor Group 0 (secure) en Group 1 (non secure) interrupts
     interrupts->irq_enable();               // Enable IRQs
 }
@@ -70,6 +73,9 @@ void bcm2711_irq_handler_core0(void) {
     if (irq_id < 256 && interrupt_table[irq_id].handler) {
         interrupt_table[irq_id].handler(interrupt_table[irq_id].data);
     }
+    if (irq_id >= GIC_IRQ_SGI0 && irq_id <= GIC_IRQ_SGI3) {
+        mailbox0(mailbox->read(irq_id, 0)); // BCM2711 uses SGI's 0-3 to signal to update delay values
+    }
     INT_GICC_2711->EOIR = iar;              // End of Interrupt schrijven om de interrupt te de-acknowledgen
 }
 
@@ -80,7 +86,6 @@ void bcm2711_fiq_handler_core0(void) {
 // ----------------------------------------------------------------------------------
 // IRQ handlers for core1
 // ----------------------------------------------------------------------------------
-
 void bcm2711_interrupts_init_core1(void) {
     interrupts->irq_disable();              // Disable IRQs
     interrupts->fiq_disable();              // Disable FIQs
@@ -99,49 +104,13 @@ void bcm2711_irq_handler_core1(void) {
     uint32_t irq_id = iar & 0x3FF; 
     // Roep de geregistreerde handler aan
     if (irq_id >= GIC_IRQ_SGI0 && irq_id <= GIC_IRQ_SGI3) {
-        mailbox0_core1(mailbox->read(irq_id, 1)); // BCM2711 uses SGI's 0-3 to signal to update delay values
+        mailbox0(mailbox->read(irq_id, 1)); // BCM2711 uses SGI's 0-3 to signal to update delay values
     }
     INT_GICC_2711->EOIR = iar;              // End of Interrupt schrijven om de interrupt te de-acknowledgen
 }
 
 void bcm2711_fiq_handler_core1(void) {
     bcm2711_irq_handler_core1();
-}
-
-// ----------------------------------------------------------------------------------
-// General IRQ routines
-// ----------------------------------------------------------------------------------
-
-void bcm2711_irq_disable(void) {
-#ifdef __aarch64__
-    asm volatile("msr daifset, #2" ::: "memory");
-#else
-    asm volatile("cpsid i" ::: "memory");
-#endif
-}
-
-void bcm2711_fiq_disable(void) {
-#ifdef __aarch64__
-    asm volatile("msr daifset, #1" ::: "memory");
-#else
-    asm volatile("cpsid f" ::: "memory");
-#endif
-}
-
-void bcm2711_irq_enable(void) {
-#ifdef __aarch64__
-    asm volatile("msr daifclr, #2" ::: "memory");
-#else
-    asm volatile("cpsie i" ::: "memory");
-#endif
-}
-
-void bcm2711_fiq_enable(void) {
-#ifdef __aarch64__
-    asm volatile("msr daifclr, #1" ::: "memory");
-#else
-    asm volatile("cpsie f" ::: "memory");
-#endif
 }
 
 void bcm2711_gic400_init_distributor_disable (void) {
@@ -159,10 +128,10 @@ const interrupts_ops_t bcm2711_interrupts_ops = {
     .init_core1     = bcm2711_interrupts_init_core1,
     .irq_handler_core1  = bcm2711_irq_handler_core1,
     .fiq_handler_core1  = bcm2711_fiq_handler_core1,
-    .irq_disable        = bcm2711_irq_disable,
-    .fiq_disable        = bcm2711_fiq_disable,
-    .irq_enable         = bcm2711_irq_enable,
-    .fiq_enable         = bcm2711_fiq_enable
+    .irq_disable        = irq_disable,
+    .fiq_disable        = fiq_disable,
+    .irq_enable         = irq_enable,
+    .fiq_enable         = fiq_enable
 };
 
 void bcm2711_interrupts_init(void)

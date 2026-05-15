@@ -85,18 +85,15 @@ endif()
 if(BOARD STREQUAL "RPIA" OR BOARD STREQUAL "RPIB" OR BOARD STREQUAL "RPIA_PLUS" OR BOARD STREQUAL "RPIB_PLUS" OR BOARD STREQUAL "RPIALPHA" OR BOARD STREQUAL "RPICM1" OR BOARD STREQUAL "RPIZ1" OR BOARD STREQUAL "RPIZ1W")
     set(RPI_CPU         arm1176jzf-s)
     set(ARM_BITS        arm32)
-    set(OUTPUT          18)
     set(IMAGEFILE       kernel.img)
     set(DUALCORE        off)
 elseif(BOARD STREQUAL "RPI2B10" OR BOARD STREQUAL "RPI2B11" OR BOARD STREQUAL "RPI3B11")
     set(RPI_CPU         cortex-a7)
     set(ARM_BITS        ${ARCH})   # arm32 / arm64
-    set(OUTPUT          18)
     set(IMAGEFILE       kernel7.img)
 elseif(BOARD STREQUAL "RPI2B12" OR BOARD STREQUAL "RPI3B12" OR BOARD STREQUAL "RPI3B13" OR BOARD STREQUAL "RPICM3" OR BOARD STREQUAL "RPICM3_PLUS" OR BOARD STREQUAL "RPI3A_PLUS" OR BOARD STREQUAL "RPI3B_PLUS" OR BOARD STREQUAL "RPIZ2W")
     set(RPI_CPU         cortex-a53)
     set(ARM_BITS        ${ARCH})   # arm32 / arm64
-    set(OUTPUT          18)
     if(ARCH STREQUAL "arm64")
          set(IMAGEFILE  kernel8.img)
     else()
@@ -105,7 +102,6 @@ elseif(BOARD STREQUAL "RPI2B12" OR BOARD STREQUAL "RPI3B12" OR BOARD STREQUAL "R
 elseif(BOARD STREQUAL "RPI4B" OR BOARD STREQUAL "RPI400" OR BOARD STREQUAL "RPICM4" OR BOARD STREQUAL "RPICM4")    
     set(RPI_CPU         cortex-a72)
     set(ARM_BITS        ${ARCH})   # arm32 / arm64
-    set(OUTPUT          18)
     if(ARCH STREQUAL "arm64")
          set(IMAGEFILE  kernel8.img)
     else()
@@ -114,7 +110,6 @@ elseif(BOARD STREQUAL "RPI4B" OR BOARD STREQUAL "RPI400" OR BOARD STREQUAL "RPIC
 elseif(BOARD STREQUAL "RPI5" OR BOARD STREQUAL "RPICM5" OR BOARD STREQUAL "RPI500" OR BOARD STREQUAL "RPICM5_LITE")
     set(RPI_CPU         cortex-a76)
     set(ARM_BITS        ${ARCH})   # arm32 / arm64
-    set(OUTPUT          18)
     set(IMAGEFILE       kernel8.img)
 endif()
 
@@ -242,10 +237,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # ----------------------
 
 # Passing definitions onto the compiler (for C and ASM)
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-    $<$<COMPILE_LANGUAGE:C>:OUTPUT=${OUTPUT}>
-)
-
 if(DUALCORE STREQUAL "on")
     target_compile_definitions(${PROJECT_NAME} PRIVATE 
     DUALCORE)

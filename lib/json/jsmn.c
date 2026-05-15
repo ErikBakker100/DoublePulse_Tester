@@ -2,7 +2,7 @@
 #include "../boards/soc/include/timers.h"
 #include "../general/include/serial.h"
 
-#define TIMER_ID 2 // Use timer 3 for timeouts. Timers are numbered 0-3
+#define RX_TIMER_ID 2 // Use timer 3 for timeouts. Timers are numbered 0-3
 
 /**
  * Creates a new parser based over a given buffer with an array of tokens
@@ -345,20 +345,86 @@ found:
   return 0;
 }
 
-uint16_t read_json(char * const buf, uint16_t maxlen, uint32_t timeout_us) {
-    uint16_t i = 0;
-    timer->set(TIMER_ID, timeout_us);
-    buf[0] = '\0';
-    while (!timer->expired(TIMER_ID) && (i < maxlen - 1)) { // while no timeout and buffer not full
-      if (rx_available()) {
-        int16_t c = rx_get();
-        if (c >= 0) buf[i++] = (char)c;
-      }
+typedef enum {
+    STATE_IDLE,
+    STATE_RECEIVING
+} json_state_t;
+
+static json_state_t state = STATE_IDLE;
+static uint16_t idx = 0;
+static int brace_count = 0;
+static uint8_t in_string = 0;
+
+static void reset_rx(void) {
+  state = STATE_IDLE;
+  idx = 0;
+  brace_count = 0;
+  in_string = 0;
+  timer->clear(RX_TIMER_ID);
+}
+
+uint16_t read_json(char * const buf) {
+  if (timer->expired(RX_TIMER_ID)) {
+    reset_rx();
+    return 0;
+  }
+  while (rx_available()) {
+    if (timer->expired(RX_TIMER_ID)) {
+      reset_rx();
+      break;
     }
-    // Timeout or overflow → reset
-    buf[i] = '\0';
-    timer->clear(TIMER_ID); // reset timeout flag
-   return i;
+    uint8_t c = rx_get();
+    switch (state) {
+      case STATE_IDLE:
+        if (c == '{') {
+          state = STATE_RECEIVING;
+          idx = 0;
+          brace_count = 1;
+          in_string = 0;
+
+          buf[idx++] = c;
+          buf[idx] = '\0';
+
+          timer->set(RX_TIMER_ID, JSON_TIMEOUT_US);
+        }
+        // alles anders negeren
+        break;
+
+      case STATE_RECEIVING:
+        if (idx >= CHAR_BUFFER - 1) {
+          // overflow → reset
+          reset_rx();
+          break;
+        }
+
+        buf[idx++] = c;
+        buf[idx] = '\0';
+
+        // string detectie
+        if (c == '"' && (idx < 2 || buf[idx-2] != '\\')) {
+            in_string = !in_string;
+        }
+
+        if (!in_string) {
+          if (c == '{') {
+            brace_count++;
+          } else if (c == '}') {
+            if (brace_count > 0) brace_count--;
+            else {
+              reset_rx();                   // onverwachte } → reset
+              return 0;
+            }
+          }
+        }
+        // ✅ JSON compleet
+        if (brace_count == 0) {
+          uint16_t len = idx;
+          reset_rx();
+          return len;
+        }
+    }
+  }
+  return 0;
 }
 
 /**

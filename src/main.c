@@ -34,13 +34,6 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   if (!board_init(&board)) return;          // read board information, if false we can not continue.
   uart->set(BAUDRATE);
   mu_puts("> ************** Dual Pulse Generator **************\r\n");
-  mu_puts("> Usage: Send JSON string, for e.g {\"pulseWidth1\": 70, \"interPulseDelay\": 30, \"pulseWidth2\": 50, \"pulseInterval\": 500}.\r\n");
-  mu_puts("> Using GPIO: ");
-  mu_put_uint(OUTPUT_PIN);
-  mu_puts(", default values :\r\n");
-  mu_puts("> _______________                 ______________\r\n");
-  mu_puts("> | pulseWidth1 | interPulseDelay | pulseWith2 | pulseInterval |\r\n");
-  mu_puts(">      70       ______ 30 _________     50     ______ 500_______\r\n");
   mu_puts(">\r\n ******************* Used Board *******************\r\n");
   mu_puts("> Model:                    ");
   mu_puts(board.description);
@@ -131,7 +124,18 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_put_uint(board.soc_temperature);
   mu_puts(" milli degrees Celsius\r\n");
   mu_puts("> ****************************************************\r\n");
+  mu_puts("> Usage: Send JSON string, for e.g {\"pulseWidth1\": 70, \"interPulseDelay\": 30, \"pulseWidth2\": 50, \"pulseInterval\": 500}.\r\n");
+  mu_puts("> GPIO for output signal: ");
+  mu_put_uint(OUTPUT_PIN);
+  mu_puts(", GPIO for triggering scope : ");
+  mu_put_uint(TRIGGER_PIN);
+  mu_puts("\r\nusing default values:\r\n");
+  mu_puts("> _______________                 ______________\r\n");
+  mu_puts("> | pulseWidth1 | interPulseDelay | pulseWith2 | pulseInterval |\r\n");
+  mu_puts(">      70       ______ 30 _________     50     ______ 500_______\r\n");
+  mu_puts("> ****************************************************\r\n");
   gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin for doublepulse generation
+  gpio->init_pin(TRIGGER_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin for scope triggering
   gpio->init_pin(STATUS_PIN, GPIO_OUTPUT, PULL_DOWN); // Set GPIO 21 voor hart beat indication
   timer->set(1, BLINK_TIMER);               // Initialize timer 1 for .1 second intervals
   interrupts->init_core0();                 // Initialize IRQs for core0
@@ -141,12 +145,13 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
 #else
   mu_puts("> Running in single core mode.\r\n");
 #endif
+  bool updated = true;                      // We start with new settings, so we will send a signal to update the intervals array.
 
   while (1) {
 #ifndef DUALCORE
     doublepulse_generator(Intervals[0], Intervals[1], Intervals[2], Intervals[3]); // In single core mode, generate the double pulse pattern in the main loop
 #endif
-    if (read_json(jsonString, CHAR_BUFFER, (50000))) { // If a character is in the UART buffer, try to get the whole string, or timeout (at 115200 one byte is ~87usec).
+    if (read_json(jsonString)) {            // If a character is in the UART buffer, try to get the whole string.
       mu_puts("> Received: ");
       mu_puts(jsonString);                  // Print the received JSON string
       mu_puts("\r\n");
@@ -178,9 +183,6 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
         continue;                           // Wait for next JSON string
       }
       // Loop through all keys in the JSON object
-#ifdef DUALCORE
-      bool updated = false;                 // remember if we have updated a value, so we can send a signal to core1 to update the intervals array if needed
-#endif
       char key[32] = {0};                   // Buffer to hold the key string
       for (int32_t i = 1; i < r; i++) {
         if (t[i].type == JSMN_STRING) {
@@ -194,15 +196,23 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
           bool found = false;
           for (int32_t j = 0; j < 4; j++) {
             if (strcmp(key, keys[j]) == 0) {
-              Intervals[j] = strtoul(jsonString + t[i+1].start, NULL, 10);
+              uint32_t value = strtoul(jsonString + t[i+1].start, NULL, 10);
+              if (value > MAX_INTERVAL) {
+                mu_puts("> ERR Parsing JSON: Value for key ");
+                mu_puts(key);
+                mu_puts(" is too large, max is ");
+                mu_put_uint(MAX_INTERVAL);
+                mu_puts(" keeping last value.");
+                mu_puts("\r\n");
+                continue;                   // Skip to the next iteration of the loop
+              }
+              Intervals[j] = value;
               mu_puts("> ");
               mu_puts(key);
               mu_puts(" now: ");
               mu_put_uint(Intervals[j]);
               mu_puts("\r\n");
-#ifdef DUALCORE
               updated = true;
-#endif
               found = true;
               break;
             } 
@@ -220,11 +230,14 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
           }
         }
       }
-#ifdef DUALCORE
     if (updated) {
-        mailbox->write(0, 1, 0x1);      // Send a signal to core1 that the intervals have been updated
-      }
+#ifdef DUALCORE
+      mailbox->write(0, 1, 0x1);      // Send a signal to core1 that the intervals have been updated
+#else
+      mailbox->write(0, 0, 0x1);      // Send a signal to core0 that the intervals have been updated
 #endif
+      updated = false;
+      }
     }
   } 
 }

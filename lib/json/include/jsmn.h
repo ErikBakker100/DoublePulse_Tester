@@ -29,7 +29,8 @@
 
 #define CHAR_BUFFER 100                     // Max size of the JSON string
 
-uint16_t read_json(char * const buf, uint16_t maxlen, uint32_t timeout);
+//uint16_t read_json(char * const buf, uint16_t maxlen, uint32_t timeout);
+uint16_t read_json(char * const buf);
 
 #ifdef __cplusplus
 extern "C" {
