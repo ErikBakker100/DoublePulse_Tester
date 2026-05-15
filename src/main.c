@@ -28,7 +28,6 @@
 static char jsonString[CHAR_BUFFER];  // Uart buffer for receiving JSON string
 static const char *keys[] = { "pulseWidth1", "interPulseDelay", "pulseWidth2", "pulseInterval" };
 
-
 void core_main_0(uint32_t arg0, uint32_t arg1) {
   date_time_t date_time;
   if (!board_init(&board)) return;          // read board information, if false we can not continue.
@@ -129,11 +128,11 @@ void core_main_0(uint32_t arg0, uint32_t arg1) {
   mu_put_uint(OUTPUT_PIN);
   mu_puts(", GPIO for triggering scope : ");
   mu_put_uint(TRIGGER_PIN);
-  mu_puts("\r\nusing default values:\r\n");
+  mu_puts("\r\n\r\n");
   mu_puts("> _______________                 ______________\r\n");
   mu_puts("> | pulseWidth1 | interPulseDelay | pulseWith2 | pulseInterval |\r\n");
   mu_puts(">      70       ______ 30 _________     50     ______ 500_______\r\n");
-  mu_puts("> ****************************************************\r\n");
+  mu_puts("> ****************************************************\r\n\r\n");
   gpio->init_pin(OUTPUT_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin for doublepulse generation
   gpio->init_pin(TRIGGER_PIN, GPIO_OUTPUT, PULL_DOWN); // Initialize output pin for scope triggering
   gpio->init_pin(STATUS_PIN, GPIO_OUTPUT, PULL_DOWN); // Set GPIO 21 voor hart beat indication
